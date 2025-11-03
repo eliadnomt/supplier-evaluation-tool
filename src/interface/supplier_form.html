@@ -5,6 +5,7 @@
   <title>Supplier Entry</title>
   <style>
     body { font-family: sans-serif; margin: 2em; }
+    nav a { margin-right: 12px; }
     label { display: block; margin-top: 1em; }
     input, select { width: 300px; }
     button { margin-top: 2em; font-size: 1.1em; }
@@ -17,6 +18,11 @@
   </style>
 </head>
 <body>
+<nav>
+  <a href="/">Dashboard</a>
+  <a href="/add">Add Supplier</a>
+  <a href="/compare">Compare Scores</a>
+</nav>
 <h2>Enter Supplier Information</h2>
 <form id="supplierForm">
   <label>Supplier Name: <input name="supplier" required></label>

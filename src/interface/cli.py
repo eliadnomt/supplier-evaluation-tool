@@ -15,17 +15,31 @@ def row_to_supplier(row) -> Supplier:
     certs = [c.strip() for c in str(row.get("certifications", "")).split(";") if c.strip()]
     return Supplier(
         supplier=row["supplier"],
-        price_eur_per_m=float(row["price_eur_per_m"]),
-        lead_time_weeks=float(row["lead_time_weeks"]),
-        moq_m=float(row["moq_m"]),
-        stock_service=str(row["stock_service"]).strip().lower() in {"yes","true","1"},
+        price_eur_per_m=float(row.get("price_eur_per_m", 0.0)),
+        lead_time_weeks=float(row.get("lead_time_weeks", 0.0)),
+        moq_m=float(row.get("moq_m", 0.0)),
+        stock_service=str(row.get("stock_service", "false")).strip().lower() in {"yes","true","1"},
         fibre_origin=row.get("fibre_origin") or None,
         yarn_origin=row.get("yarn_origin") or None,
         fabric_origin=row.get("fabric_origin") or None,
         dye_origin=row.get("dye_origin") or None,
         sewing_origin=row.get("sewing_origin") or None,
         certifications=certs,
-        documentation_level=str(row.get("documentation_level","none"))
+        documentation_level=str(row.get("documentation_level","none")),
+        material_origin=row.get("material_origin"),
+        countrySpinning=row.get("countrySpinning"),
+        countryFabric=row.get("countryFabric"),
+        countryDyeing=row.get("countryDyeing"),
+        countryMaking=row.get("countryMaking"),
+        fabricProcess=row.get("fabricProcess"),
+        makingComplexity=row.get("makingComplexity"),
+        dyeingProcess=row.get("dyeingProcess"),
+        businessSize=row.get("businessSize"),
+        numberOfReferences=row.get("numberOfReferences"),
+        price=row.get("price"),
+        weight_gm2=row.get("weight_gm2"),
+        gross_width=row.get("gross_width"),
+        product=row.get("product")
     )
 
 def main(yaml_path: str):

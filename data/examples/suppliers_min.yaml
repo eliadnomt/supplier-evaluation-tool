@@ -15,3 +15,22 @@
   price: 200.0
   weight_gm2: 100.0
   gross_width: 150.0
+- supplier: Another supplier
+  price_eur_per_m: 10.0
+  moq_m: 200.0
+  material_origin:
+  - id: ei-coton-organic
+    share: 1.0
+    spinning: ConventionalSpinning
+  countrySpinning: France
+  countryFabric: France
+  countryDyeing: France
+  countryMaking: France
+  fabricProcess: knitting-mix
+  dyeingProcess: continuous
+  makingComplexity: medium
+  businessSize: large-business-with-services
+  numberOfReferences: 150
+  price: 200.0
+  weight_gm2: 110.0
+  gross_width: 150.0
