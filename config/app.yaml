@@ -1,0 +1,5 @@
+# Application-level settings and labels
+app_name: "Supplier Evaluation Tool"
+version: "0.1.0"
+outputs:
+  export_dir: "out"

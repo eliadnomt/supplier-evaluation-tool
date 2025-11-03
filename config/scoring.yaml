@@ -1,0 +1,18 @@
+# Scoring configuration
+transparency_weight:
+  none: 0.7
+  country_only: 0.85
+  factory_identified: 1.0
+  audits_verified: 1.15
+
+certification_tiers:
+  tier1_points_per_cert: 1.2   # GOTS, GRS, Fairtrade, SA8000, RWS
+  tier2_points_per_cert: 0.6   # OCS, FSC, RCS, EU Ecolabel
+  tier3_points_per_cert: 0.2   # REACH, OEKO-TEX 100, ZDHC
+  max_bonus:
+    tier1: 2.4
+    tier2: 1.2
+    tier3: 0.4
+
+caps:
+  final_csr_score: 10.0

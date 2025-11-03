@@ -1,0 +1,4 @@
+supplier,price_eur_per_m,lead_time_weeks,moq_m,stock_service,fibre_origin,yarn_origin,fabric_origin,dye_origin,sewing_origin,certifications,documentation_level
+AlphaTextiles,7.8,6,200,Yes,Turkey,Turkey,Portugal,Portugal,Portugal,"GOTS;REACH","audits_verified"
+BetaFabrics,5.2,4,50,No,India,India,India,Bangladesh,Bangladesh,"OCS;OEKO-TEX 100","country_only"
+GammaMills,9.9,10,300,Yes,Unknown,Unknown,Spain,Spain,Morocco,"GRS;REACH;ZDHC","factory_identified"

@@ -1,0 +1,11 @@
+# Shared assumptions (held constant across supplier comparisons)
+# Adjust these to match your product context. These are examples only.
+product:
+  garment_weight_g_per_m: 250        # example linear density proxy
+  trims:
+    buttons: standard                 # standard, none, heavy
+    zippers: none                     # none, standard
+use_phase:
+  washing_model: "EU_default"
+end_of_life:
+  scenario: "EU_default"

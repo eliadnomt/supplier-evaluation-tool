@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supplier Entry</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    label { display: block; margin-top: 1em; }
+    input, select { width: 300px; }
+    button { margin-top: 2em; font-size: 1.1em; }
+    .material-row { display: flex; gap: 1em; align-items: center; margin-bottom: 0.5em; }
+    .material-row select, .material-row input { width: 160px; }
+    .remove-btn { background: #eee; color: #a00; border: 1px solid #a00; border-radius: 3px; }
+    .remove-btn:disabled { color: #888; border-color: #ccc; }
+    .add-btn { margin: 1em 0; }
+    .warn { color: #a00; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h2>Enter Supplier Information</h2>
+<form id="supplierForm">
+  <label>Supplier Name: <input name="supplier" required></label>
+  <label id="mat-origin-label">Material origin:</label>
+  <div id="materialsSection"></div>
+  <button type="button" class="add-btn" id="addMaterialBtn">Add Material</button>
+  <div id="matOriginWarn" class="warn" style="display:none"></div>
+
+  <h3>Country of origin</h3>
+  <label>Spinning: <select name="countrySpinning" id="spinningCountrySelect"></select></label>
+  <label>Fabric: <select name="countryFabric" id="fabricCountrySelect"></select></label>
+  <label>Dyeing: <select name="countryDyeing" id="dyeingCountrySelect"></select></label>
+  <label>Making: <select name="countryMaking" id="makingCountrySelect"></select></label>
+
+  <div id=""productionPropertiesSection"></div>
+  <h3>Production specifications</h3>
+  <label>Fabric Process: <select name="fabricProcess" id="fabricProcessSelect"></select></label>
+  <label>Making Complexity: <select name="makingComplexity" id="makingComplexitySelect"></select></label>
+  <label>Gross fabric width (cm): <input name="gross_width" type="number" step="0.01" required></label>
+  <label>Weight (g/m²): <input name="weight_gm2" type="number" step="0.1" required></label>
+  <label>Price €/m: <input name="price_eur_per_m" type="number" step="0.01" required></label>
+  <label>MOQ (m): <input name="moq_m" type="number" step="0.01" required></label>
+
+  <div id=""articlesSection"></div>
+  <label>Number of articles: <input name="numberOfReferences" type="number" required></label>
+  <label>Price per article (€): <input name="price" type="number" step="0.01" required></label>
+  <button type="submit">Save Supplier</button>
+  <div id="status"></div>
+</form>
+<script>
+function fillSelect(id, url, nameAttr=false) {
+  fetch(url).then(r=>r.json()).then(arr => {
+    const s = document.getElementById(id);
+    s.innerHTML = '';
+    for (const v of arr) {
+      let val = v;
+      if (typeof(v)==='object') val = v.id || v.name || JSON.stringify(v);
+      let label = val;
+      if (typeof(v)==='object' && v.name) label = v.name;
+      let opt = document.createElement('option');
+      opt.value = val;
+      opt.text = label;
+      if(nameAttr && v.name) opt.text = v.name;
+      s.appendChild(opt);
+    }
+  });
+}
+let materialsData = [];
+let spinningData = [];
+function fetchMaterialEnums(callback) {
+  // Fetch both in parallel; call callback when both have loaded
+  let done = 0;
+  fetch('/api/enums/materials').then(r=>r.json()).then(arr => { materialsData = arr; checkReady(); });
+  fetch('/api/enums/materialSpinning').then(r=>r.json()).then(arr => { spinningData = arr; checkReady(); });
+  function checkReady() { done++; if(done===2 && callback) callback(); }
+}
+function createMaterialRow(rowData) {
+  const idx = document.querySelectorAll('.material-row').length;
+  const row = document.createElement('div');
+  row.className = 'material-row';
+  // Material select
+  const matSel = document.createElement('select');
+  for (const m of materialsData) {
+    let val = (typeof m === 'object' ? m.id || m.name || JSON.stringify(m) : m);
+    let label = (typeof m === 'object' && m.name) ? m.name : val;
+    let opt = document.createElement('option');
+    opt.value = val;
+    opt.text = label;
+    matSel.appendChild(opt);
+  }
+  matSel.value = rowData && rowData.id ? rowData.id : (matSel.options[0]?.value || '');
+  row.appendChild(matSel);
+  // Share input
+  const shareInput = document.createElement('input');
+  shareInput.type = 'number';
+  shareInput.min = 0.01;
+  shareInput.max = 1;
+  shareInput.step = 0.01;
+  shareInput.value = rowData && rowData.share ? rowData.share : '';
+  shareInput.placeholder = 'share (0-1)';
+  row.appendChild(shareInput);
+  // Spinning select
+  const spinSel = document.createElement('select');
+  for (const s of spinningData) {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.text = s;
+    spinSel.appendChild(opt);
+  }
+  spinSel.value = rowData && rowData.spinning ? rowData.spinning : 'ConventionalSpinning';
+  row.appendChild(spinSel);
+  // Remove button
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.innerText = 'Remove';
+  removeBtn.className = 'remove-btn';
+  removeBtn.onclick = function() {
+    row.remove();
+    updateMatSharesSum();
+  };
+  row.appendChild(removeBtn);
+  document.getElementById('materialsSection').appendChild(row);
+  // Event for updating constraint
+  shareInput.oninput = updateMatSharesSum;
+}
+function getMaterialOriginFromForm() {
+  const rows = document.querySelectorAll('.material-row');
+  let out = [];
+  for (const row of rows) {
+    const [matSel, shareInput, spinSel] = row.querySelectorAll('select, input');
+    const shareVal = parseFloat(shareInput.value);
+    if (!matSel.value || isNaN(shareVal) || !spinSel.value) continue;
+    out.push({ id: matSel.value, share: shareVal, spinning: spinSel.value });
+  }
+  return out;
+}
+function updateMatSharesSum() {
+  const orig = getMaterialOriginFromForm();
+  const totalShare = orig.reduce((acc,v) => acc+v.share,0);
+  const warn = document.getElementById('matOriginWarn');
+  warn.style.display = (totalShare > 1.0001) ? '' : 'none';
+  warn.innerText = totalShare > 1.0001 ? 'Total share of all materials must not exceed 1 (currently '+totalShare.toFixed(2)+').' : '';
+  document.getElementById('addMaterialBtn').disabled = totalShare >= 1.0;
+}
+document.getElementById('addMaterialBtn').onclick = () => {
+  createMaterialRow();
+  updateMatSharesSum();
+};
+window.onload = () => {
+  fillSelect('materialSelect', '/api/enums/materials');
+  fillSelect('spinningCountrySelect', '/api/enums/countries');
+  fillSelect('fabricCountrySelect', '/api/enums/countries');
+  fillSelect('dyeingCountrySelect', '/api/enums/countries');
+  fillSelect('makingCountrySelect', '/api/enums/countries');
+  fillSelect('fabricProcessSelect', '/api/enums/fabricProcess');
+  fillSelect('makingComplexitySelect', '/api/enums/makingComplexity');
+  fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
+};
+document.getElementById('supplierForm').onsubmit = function(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  let obj = {};
+  for (let [k, v] of fd.entries()) {
+    if (k === 'material_origin') continue; // handled below
+    else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences')) { obj[k] = parseFloat(v); }
+    else { obj[k] = v; }
+  }
+  obj['material_origin'] = getMaterialOriginFromForm();
+  const totalShare = obj['material_origin'].reduce((acc, v) => acc + v.share, 0);
+  if (totalShare > 1.0001 || obj['material_origin'].some(m => isNaN(m.share) || m.share < 0.01 || m.share > 1)) {
+    document.getElementById('matOriginWarn').style.display = '';
+    document.getElementById('matOriginWarn').innerText = 'Material shares total must not exceed 1 and all shares must be between 0.01 and 1.';
+    return;
+  }
+  fetch('/api/suppliers', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(obj)}).then(resp => {
+    if (resp.ok) {
+      document.getElementById('status').innerText = 'Supplier saved!';
+      e.target.reset();
+      document.getElementById('materialsSection').innerHTML = '';
+      // Redraw with new enums
+      fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
+    } else resp.text().then(t => document.getElementById('status').innerText = 'Error: '+t);
+  });
+};
+</script>
+</body>
+</html>

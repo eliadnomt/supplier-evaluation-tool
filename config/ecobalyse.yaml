@@ -1,0 +1,9 @@
+# Ecobalyse API configuration
+base_url: "https://ecobalyse.beta.gouv.fr/versions/v7.0.0/api"
+endpoints:
+  materials: "/textile/materials"
+  score: "/textile/simulator"
+timeout_seconds: 200
+auth:
+  # Use environment variables for secrets
+  api_key_env: "ECOBALYSE_API_KEY"

@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    image: supplier-evaluation-tool:latest
+    environment:
+      # Provide your actual key when running, or use an .env file
+      - ECOBALYSE_API_KEY=${ECOBALYSE_API_KEY}
+    command: ["data/examples/suppliers_min.yaml"]
+    volumes:
+      - ./:/app
+    # Uncomment to run interactively and iterate
+    # tty: true
+    # stdin_open: true

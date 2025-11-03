@@ -1,0 +1,6 @@
+# Optional adjustment factors for country/region (example placeholders)
+# You can use these for display or future heuristics.
+regions:
+  EU: 1.0
+  near_EU: 0.9
+  rest_of_world: 0.8
