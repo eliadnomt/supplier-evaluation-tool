@@ -157,6 +157,12 @@ def add_page():
 def compare_page():
     return send_from_directory(THIS_DIR, 'compare_suppliers.html')
 
+# --------- Static Files ---------
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    static_dir = os.path.join(THIS_DIR, 'static')
+    return send_from_directory(static_dir, filename)
+
 # --------- Enum API ---------
 @app.route('/api/enums/<enum_name>')
 def get_enum(enum_name):
