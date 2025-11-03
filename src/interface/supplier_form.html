@@ -20,6 +20,7 @@
 <h2>Enter Supplier Information</h2>
 <form id="supplierForm">
   <label>Supplier Name: <input name="supplier" required></label>
+  <label>Business Size: <select name="businessSize" id="businessSizeSelect"></select></label>
   <label id="mat-origin-label">Material origin:</label>
   <div id="materialsSection"></div>
   <button type="button" class="add-btn" id="addMaterialBtn">Add Material</button>
@@ -30,17 +31,19 @@
   <label>Fabric: <select name="countryFabric" id="fabricCountrySelect"></select></label>
   <label>Dyeing: <select name="countryDyeing" id="dyeingCountrySelect"></select></label>
   <label>Making: <select name="countryMaking" id="makingCountrySelect"></select></label>
-
-  <div id=""productionPropertiesSection"></div>
-  <h3>Production specifications</h3>
+ 
+  <div id="productionPropertiesSection"></div>
+  <h3>Fabric production specifications</h3>
   <label>Fabric Process: <select name="fabricProcess" id="fabricProcessSelect"></select></label>
+  <label>Dyeing Process: <select name="dyeingProcess" id="dyeingProcessSelect"></select></label>
   <label>Making Complexity: <select name="makingComplexity" id="makingComplexitySelect"></select></label>
   <label>Gross fabric width (cm): <input name="gross_width" type="number" step="0.01" required></label>
   <label>Weight (g/m²): <input name="weight_gm2" type="number" step="0.1" required></label>
   <label>Price €/m: <input name="price_eur_per_m" type="number" step="0.01" required></label>
   <label>MOQ (m): <input name="moq_m" type="number" step="0.01" required></label>
-
-  <div id=""articlesSection"></div>
+ 
+  <div id="articlesSection"></div>
+  <h3>Production run specifications</h3>
   <label>Number of articles: <input name="numberOfReferences" type="number" required></label>
   <label>Price per article (€): <input name="price" type="number" step="0.01" required></label>
   <button type="submit">Save Supplier</button>
@@ -50,6 +53,7 @@
 function fillSelect(id, url, nameAttr=false) {
   fetch(url).then(r=>r.json()).then(arr => {
     const s = document.getElementById(id);
+    if (!s) return;
     s.innerHTML = '';
     for (const v of arr) {
       let val = v;
@@ -67,17 +71,14 @@ function fillSelect(id, url, nameAttr=false) {
 let materialsData = [];
 let spinningData = [];
 function fetchMaterialEnums(callback) {
-  // Fetch both in parallel; call callback when both have loaded
   let done = 0;
   fetch('/api/enums/materials').then(r=>r.json()).then(arr => { materialsData = arr; checkReady(); });
   fetch('/api/enums/materialSpinning').then(r=>r.json()).then(arr => { spinningData = arr; checkReady(); });
   function checkReady() { done++; if(done===2 && callback) callback(); }
 }
 function createMaterialRow(rowData) {
-  const idx = document.querySelectorAll('.material-row').length;
   const row = document.createElement('div');
   row.className = 'material-row';
-  // Material select
   const matSel = document.createElement('select');
   for (const m of materialsData) {
     let val = (typeof m === 'object' ? m.id || m.name || JSON.stringify(m) : m);
@@ -89,7 +90,6 @@ function createMaterialRow(rowData) {
   }
   matSel.value = rowData && rowData.id ? rowData.id : (matSel.options[0]?.value || '');
   row.appendChild(matSel);
-  // Share input
   const shareInput = document.createElement('input');
   shareInput.type = 'number';
   shareInput.min = 0.01;
@@ -98,7 +98,6 @@ function createMaterialRow(rowData) {
   shareInput.value = rowData && rowData.share ? rowData.share : '';
   shareInput.placeholder = 'share (0-1)';
   row.appendChild(shareInput);
-  // Spinning select
   const spinSel = document.createElement('select');
   for (const s of spinningData) {
     const opt = document.createElement('option');
@@ -108,7 +107,6 @@ function createMaterialRow(rowData) {
   }
   spinSel.value = rowData && rowData.spinning ? rowData.spinning : 'ConventionalSpinning';
   row.appendChild(spinSel);
-  // Remove button
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.innerText = 'Remove';
@@ -119,7 +117,6 @@ function createMaterialRow(rowData) {
   };
   row.appendChild(removeBtn);
   document.getElementById('materialsSection').appendChild(row);
-  // Event for updating constraint
   shareInput.oninput = updateMatSharesSum;
 }
 function getMaterialOriginFromForm() {
@@ -146,13 +143,14 @@ document.getElementById('addMaterialBtn').onclick = () => {
   updateMatSharesSum();
 };
 window.onload = () => {
-  fillSelect('materialSelect', '/api/enums/materials');
   fillSelect('spinningCountrySelect', '/api/enums/countries');
   fillSelect('fabricCountrySelect', '/api/enums/countries');
   fillSelect('dyeingCountrySelect', '/api/enums/countries');
   fillSelect('makingCountrySelect', '/api/enums/countries');
   fillSelect('fabricProcessSelect', '/api/enums/fabricProcess');
   fillSelect('makingComplexitySelect', '/api/enums/makingComplexity');
+  fillSelect('dyeingProcessSelect', '/api/enums/dyeingProcess');
+  fillSelect('businessSizeSelect', '/api/enums/businessSize');
   fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
 };
 document.getElementById('supplierForm').onsubmit = function(e) {
@@ -160,7 +158,7 @@ document.getElementById('supplierForm').onsubmit = function(e) {
   const fd = new FormData(e.target);
   let obj = {};
   for (let [k, v] of fd.entries()) {
-    if (k === 'material_origin') continue; // handled below
+    if (k === 'material_origin') continue;
     else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences')) { obj[k] = parseFloat(v); }
     else { obj[k] = v; }
   }
@@ -176,7 +174,6 @@ document.getElementById('supplierForm').onsubmit = function(e) {
       document.getElementById('status').innerText = 'Supplier saved!';
       e.target.reset();
       document.getElementById('materialsSection').innerHTML = '';
-      // Redraw with new enums
       fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
     } else resp.text().then(t => document.getElementById('status').innerText = 'Error: '+t);
   });
