@@ -145,8 +145,12 @@ function updateMatSharesSum() {
   document.getElementById('addMaterialBtn').disabled = totalShare >= 1.0;
 }
 document.getElementById('addMaterialBtn').onclick = () => {
-  createMaterialRow();
-  updateMatSharesSum();
+  // Ensure enums are loaded, then add a row
+  if (materialsData.length === 0 || spinningData.length === 0) {
+    fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
+  } else {
+    createMaterialRow(); updateMatSharesSum();
+  }
 };
 window.onload = () => {
   fillSelect('spinningCountrySelect', '/api/enums/countries');
@@ -157,7 +161,8 @@ window.onload = () => {
   fillSelect('makingComplexitySelect', '/api/enums/makingComplexity');
   fillSelect('dyeingProcessSelect', '/api/enums/dyeingProcess');
   fillSelect('businessSizeSelect', '/api/enums/businessSize');
-  fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
+  // Preload materials/spinning in background, but don't auto add row
+  fetchMaterialEnums(()=>{});
 };
 document.getElementById('supplierForm').onsubmit = function(e) {
   e.preventDefault();
@@ -180,7 +185,7 @@ document.getElementById('supplierForm').onsubmit = function(e) {
       document.getElementById('status').innerText = 'Supplier saved!';
       e.target.reset();
       document.getElementById('materialsSection').innerHTML = '';
-      fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
+      // Keep enums cached; do not add default row
     } else resp.text().then(t => document.getElementById('status').innerText = 'Error: '+t);
   });
 };

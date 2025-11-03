@@ -6,6 +6,7 @@ from src.models.supplier import Supplier
 import yaml
 import os
 from collections import OrderedDict
+import time
 
 app = Flask(__name__)
 # Configure where to save suppliers
@@ -15,6 +16,23 @@ BASE_API_URL = os.environ.get('ECOBALYSE_API_URL', 'https://ecobalyse.beta.gouv.
 # Paths
 THIS_DIR = os.path.dirname(__file__)
 CONFIG_ROOT = os.path.join(os.path.dirname(os.path.dirname(THIS_DIR)), 'config')
+
+# Simple in-memory cache for enums
+_ENUM_CACHE = {}
+_ENUM_TTL_SECONDS = int(os.environ.get('ENUM_CACHE_TTL_SECONDS', 6 * 60 * 60))  # 6h default
+
+def _cache_get(key):
+    item = _ENUM_CACHE.get(key)
+    if not item:
+        return None
+    data, ts = item
+    if (time.time() - ts) > _ENUM_TTL_SECONDS:
+        _ENUM_CACHE.pop(key, None)
+        return None
+    return data
+
+def _cache_set(key, data):
+    _ENUM_CACHE[key] = (data, time.time())
 
 PREFERRED_FIELD_ORDER = [
     'supplier',
@@ -106,6 +124,10 @@ def _to_plain(obj):
     return obj
 
 def get_enum_response(enum):
+    # Serve from cache if present
+    cached = _cache_get(enum)
+    if cached is not None:
+        return cached
     fetch_map = {
         'products': EcobalyseClient.fetch_products,
         'materials': EcobalyseClient.fetch_materials,
@@ -118,9 +140,9 @@ def get_enum_response(enum):
         'dyeingProcess': EcobalyseClient.fetch_dyeing_process_types,
     }
     fn = fetch_map.get(enum)
-    if fn:
-        return fn(BASE_API_URL) or []
-    return []
+    data = fn(BASE_API_URL) or [] if fn else []
+    _cache_set(enum, data)
+    return data
 
 # --------- Pages ---------
 @app.route('/')

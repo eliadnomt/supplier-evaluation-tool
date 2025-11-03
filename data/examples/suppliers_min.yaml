@@ -34,3 +34,22 @@
   price: 200.0
   weight_gm2: 110.0
   gross_width: 150.0
+- supplier: Supplier 3
+  price_eur_per_m: 15.0
+  moq_m: 50.0
+  material_origin:
+  - id: ei-laine-par-defaut
+    share: 1.0
+    spinning: ConventionalSpinning
+  countrySpinning: Maroc
+  countryFabric: Maroc
+  countryDyeing: Tunisie
+  countryMaking: France
+  fabricProcess: knitting-mix
+  dyeingProcess: average
+  makingComplexity: medium
+  businessSize: small-business
+  numberOfReferences: 30
+  price: 350.0
+  weight_gm2: 200.0
+  gross_width: 120.0
