@@ -200,6 +200,69 @@ def list_suppliers():
         data = []
     return jsonify(data)
 
+@app.route('/api/suppliers/<int:index>', methods=['DELETE'])
+def delete_supplier(index):
+    if os.path.exists(SUPPLIERS_YAML):
+        with open(SUPPLIERS_YAML) as yf:
+            existing = yaml.safe_load(yf) or []
+    else:
+        return jsonify({'error': 'No suppliers file'}), 404
+    
+    if isinstance(existing, dict) and 'suppliers' in existing:
+        suppliers_list = existing['suppliers']
+    elif isinstance(existing, list):
+        suppliers_list = existing
+    else:
+        suppliers_list = []
+    
+    if index < 0 or index >= len(suppliers_list):
+        return jsonify({'error': 'Invalid index'}), 404
+    
+    suppliers_list.pop(index)
+    
+    if isinstance(existing, dict):
+        to_dump = existing
+    else:
+        to_dump = suppliers_list
+    
+    to_dump_plain = _to_plain(to_dump)
+    with open(SUPPLIERS_YAML, 'w', encoding='utf-8') as yf:
+        yaml.safe_dump(to_dump_plain, yf, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    return jsonify({'status': 'ok'})
+
+@app.route('/api/suppliers/<int:index>', methods=['PUT'])
+def update_supplier(index):
+    supplier = request.get_json()
+    supplier = normalize_supplier(supplier)
+    
+    if os.path.exists(SUPPLIERS_YAML):
+        with open(SUPPLIERS_YAML) as yf:
+            existing = yaml.safe_load(yf) or []
+    else:
+        return jsonify({'error': 'No suppliers file'}), 404
+    
+    if isinstance(existing, dict) and 'suppliers' in existing:
+        suppliers_list = existing['suppliers']
+    elif isinstance(existing, list):
+        suppliers_list = existing
+    else:
+        suppliers_list = []
+    
+    if index < 0 or index >= len(suppliers_list):
+        return jsonify({'error': 'Invalid index'}), 404
+    
+    suppliers_list[index] = supplier
+    
+    if isinstance(existing, dict):
+        to_dump = existing
+    else:
+        to_dump = suppliers_list
+    
+    to_dump_plain = _to_plain(to_dump)
+    with open(SUPPLIERS_YAML, 'w', encoding='utf-8') as yf:
+        yaml.safe_dump(to_dump_plain, yf, allow_unicode=True, sort_keys=False, default_flow_style=False)
+    return jsonify({'status': 'ok'})
+
 # --------- Scoring API ---------
 
 def _row_to_supplier(row: dict) -> Supplier:

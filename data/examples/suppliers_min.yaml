@@ -1,20 +1,3 @@
-- supplier: Test
-  price_eur_per_m: 10.0
-  moq_m: 50.0
-  material_origin:
-  - id: ei-coton
-    share: 1.0
-    spinning: ConventionalSpinning
-  countrySpinning: Pays inconnu (par défaut)
-  countryFabric: Pays inconnu (par défaut)
-  countryDyeing: Pays inconnu (par défaut)
-  countryMaking: Pays inconnu (par défaut)
-  fabricProcess: knitting-mix
-  makingComplexity: very-high
-  numberOfReferences: 20
-  price: 200.0
-  weight_gm2: 100.0
-  gross_width: 150.0
 - supplier: Another supplier
   price_eur_per_m: 10.0
   moq_m: 200.0
@@ -53,3 +36,28 @@
   price: 350.0
   weight_gm2: 200.0
   gross_width: 120.0
+- supplier: one more
+  price_eur_per_m: 15.0
+  moq_m: 200.0
+  material_origin:
+  - id: ei-jute-kenaf
+    share: 0.1
+    spinning: UnconventionalSpinning
+  - id: ei-coton
+    share: 0.5
+    spinning: ConventionalSpinning
+  - id: ei-lin
+    share: 0.4
+    spinning: ConventionalSpinning
+  countrySpinning: Chine
+  countryFabric: Chine
+  countryDyeing: Chine
+  countryMaking: Bangladesh
+  fabricProcess: weaving
+  dyeingProcess: average
+  makingComplexity: low
+  businessSize: large-business-without-services
+  numberOfReferences: 100
+  price: 340.0
+  weight_gm2: 110.0
+  gross_width: 140.0
