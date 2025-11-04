@@ -1,22 +1,26 @@
-# Supplier Evaluation Tool (Skeleton)
+# Supplier Evaluation Tool
 
-This repository provides a clean Python skeleton to evaluate material suppliers using an **Ecobalyse Score**,
-plus transparency weighting and certification bonuses. Commercial metrics (price, lead time, MOQ) are shown separately.
+This repository provides a web-based tool to evaluate material suppliers using an **Ecobalyse Score**,
+transparency metrics, and certification bonuses. Commercial metrics (price, lead time, MOQ) are shown separately.
 
 ## Key Ideas
-- We **do not** compute LCA. We call (or mimic) **Ecobalyse** to obtain an **Ecobalyse Score** (0–10).
-- Final CSR Score formula:
-  ```
-  Final CSR Score (raw) = (Ecobalyse Score × Transparency Weight) + Certification Bonus
-  Final CSR Score        = min(Final CSR Score (raw), 10)
-  ```
+- We **do not** compute LCA. We call **Ecobalyse** to obtain an **Ecobalyse Score** (0–10).
+- Scores are normalized and displayed independently on radar charts (to be integrated), allowing for direct comparison across suppliers.
+- Ecobalyse, Transparency, and Certification metrics are shown as separate axes on the radar chart, each normalized to the 0-10 scale.
 - All tunables live in YAML. No hard-coded weights in code.
 
 ## Structure
 See `src/` for code, `config/` for YAML configs, `data/` for examples, and `notebooks/` for analysis/plots.
 
+## Web UI
 
-## Docker (no venv required)
+The tool provides a web-based interface for:
+- Adding and editing suppliers
+- Viewing supplier information
+- Comparing supplier scores (Ecobalyse, Transparency, Certification)
+- Understanding how Ecobalyse integration works
+
+## Docker Setup
 
 Build the image:
 
@@ -24,13 +28,17 @@ Build the image:
 docker build -t supplier-evaluation-tool:latest .
 ```
 
-Run the CLI inside the container (mount current dir so outputs land in `out/` locally):
+Run the web UI (mount current dir so supplier data persists locally):
 
 ```bash
 export ECOBALYSE_API_KEY=YOUR_KEY_HERE
-docker run --rm \
-  -e ECOBALYSE_API_KEY=$ECOBALYSE_API_KEY \  -v $PWD:/app \  supplier-evaluation-tool:latest data/examples/suppliers_min.yaml
+docker run --rm -p 8000:5000 \
+  -e ECOBALYSE_API_KEY=$ECOBALYSE_API_KEY \
+  -v $PWD/data/examples:/app/data/examples \
+  supplier-evaluation-tool:latest
 ```
+
+Then visit [http://localhost:8000](http://localhost:8000) in your browser.
 
 Or with **docker compose**:
 
@@ -42,8 +50,6 @@ Convenience with **Makefile**:
 
 ```bash
 make build
-ECOBALYSE_API_KEY=YOUR_KEY_HERE make run CSV=data/examples/suppliers_min.yaml
+ECOBALYSE_API_KEY=YOUR_KEY_HERE make run
 make shell   # get a bash shell inside the container
 ```
-
-**Note:** The Ecobalyse client is a stub. Implement the real POST in `src/api/ecobalyse_client.py`.

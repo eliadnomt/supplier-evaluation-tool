@@ -1,0 +1,47 @@
+/* Form-specific styles */
+body {
+  font-family: sans-serif;
+  margin: 2em;
+}
+nav a {
+  margin-right: 12px;
+}
+label {
+  display: block;
+  margin-top: 1em;
+}
+input, select {
+  width: 300px;
+}
+button {
+  margin-top: 2em;
+  font-size: 1.1em;
+}
+.material-row {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  margin-bottom: 1em;
+}
+.material-row select,
+.material-row input {
+  width: 160px;
+}
+.remove-btn {
+  background: #eee;
+  color: #a00;
+  border: 1px solid #a00;
+  border-radius: 3px;
+}
+.remove-btn:disabled {
+  color: #888;
+  border-color: #ccc;
+}
+.add-btn {
+  margin: 1em 0;
+}
+.warn {
+  color: #a00;
+  font-weight: bold;
+}
+

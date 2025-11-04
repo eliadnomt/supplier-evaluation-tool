@@ -5,9 +5,11 @@ services:
     environment:
       # Provide your actual key when running, or use an .env file
       - ECOBALYSE_API_KEY=${ECOBALYSE_API_KEY}
-    command: ["data/examples/suppliers_min.yaml"]
+    ports:
+      - "8000:5000"
     volumes:
-      - ./:/app
+      - ./data/examples:/app/data/examples
+      - ./src/interface/static:/app/src/interface/static
     # Uncomment to run interactively and iterate
     # tty: true
     # stdin_open: true

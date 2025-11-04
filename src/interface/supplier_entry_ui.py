@@ -153,10 +153,6 @@ def dashboard():
 def add_page():
     return send_from_directory(THIS_DIR, 'supplier_form.html')
 
-@app.route('/compare')
-def compare_page():
-    return send_from_directory(THIS_DIR, 'compare_suppliers.html')
-
 # --------- Static Files ---------
 @app.route('/static/<path:filename>')
 def static_files(filename):
@@ -322,6 +318,47 @@ def compute_scores():
                 })
         except Exception as e:
             results.append({ 'supplier': row.get('supplier','(unknown)'), 'error': str(e) })
+    return jsonify(results)
+
+@app.route('/api/suppliers/for-radar')
+def suppliers_for_radar():
+    """Return suppliers with all data needed for radar chart scoring"""
+    data = load_yaml(SUPPLIERS_YAML) or []
+    suppliers_list = data if isinstance(data, list) else data.get('suppliers', [])
+    results = []
+    
+    for row in suppliers_list:
+        try:
+            s = _row_to_supplier(row)
+            # Get Ecobalyse score
+            score_result = final_csr_score(s, CONFIG_ROOT)
+            ecobalyse_score = score_result[0] if score_result else None
+            
+            # Build supplier data with all fields needed for radar chart
+            supplier_data = {
+                'supplier': s.supplier,
+                'price_eur_per_m': s.price_eur_per_m,
+                'lead_time_weeks': s.lead_time_weeks,
+                'moq_m': s.moq_m,
+                'ecobalyse_score': ecobalyse_score,
+                'material_origin': s.material_origin,
+                'countrySpinning': s.countrySpinning,
+                'countryFabric': s.countryFabric,
+                'countryDyeing': s.countryDyeing,
+                'countryMaking': s.countryMaking,
+                'fabricProcess': s.fabricProcess,
+                'dyeingProcess': s.dyeingProcess,
+                'certifications': s.certifications or []
+            }
+            results.append(supplier_data)
+        except Exception as e:
+            # Include supplier name even if scoring fails
+            results.append({
+                'supplier': row.get('supplier', '(unknown)'),
+                'error': str(e),
+                'ecobalyse_score': None
+            })
+    
     return jsonify(results)
 
 if __name__ == '__main__':
