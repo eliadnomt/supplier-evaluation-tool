@@ -339,7 +339,7 @@ def suppliers_for_radar():
             assumptions = load_yaml(f"{CONFIG_ROOT}/assumptions.yaml") or {}
             product_type = s.product or assumptions.get("default_product", "tshirt")
             
-            # Build supplier data with all fields needed for radar chart
+            # Build supplier data with all fields needed for radar chart and supplier list
             supplier_data = {
                 'supplier': s.supplier,
                 'price_eur_per_m': s.price_eur_per_m,
@@ -354,7 +354,14 @@ def suppliers_for_radar():
                 'countryMaking': s.countryMaking,
                 'fabricProcess': s.fabricProcess,
                 'dyeingProcess': s.dyeingProcess,
-                'certifications': s.certifications or []
+                'certifications': s.certifications or [],
+                # Additional fields for supplier list display
+                'weight_gm2': s.weight_gm2,
+                'gross_width': s.gross_width,
+                'price': s.price,
+                'numberOfReferences': s.numberOfReferences,
+                'businessSize': s.businessSize,
+                'makingComplexity': s.makingComplexity
             }
             results.append(supplier_data)
         except Exception as e:

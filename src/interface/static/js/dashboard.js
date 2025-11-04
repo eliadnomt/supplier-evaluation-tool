@@ -147,7 +147,18 @@ function getProductTypeDisplay(productType) {
 
 function renderSuppliers(suppliers) {
   suppliersList.innerHTML = '';
-  suppliers.forEach((supplier, index) => {
+  
+  // Sort suppliers alphabetically by name
+  const sortedSuppliers = [...suppliers].sort((a, b) => {
+    const nameA = (a.supplier || '').toLowerCase();
+    const nameB = (b.supplier || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+  
+  sortedSuppliers.forEach((supplier, originalIndex) => {
+    // Find original index for edit/delete operations
+    const index = suppliers.findIndex(s => s === supplier);
+    const actualIndex = index >= 0 ? index : originalIndex;
     const item = document.createElement('div');
     item.className = 'supplier-item';
     
@@ -162,22 +173,47 @@ function renderSuppliers(suppliers) {
     // Calculate traceability count (number of known production steps)
     const traceabilityCount = calculateTraceabilityCount(supplier);
     
-    const fields = [
+    // Separate Ecobalyse and Traceability fields (always shown, on their own row)
+    const highlightFields = [
+      { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)})`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A', isHighlight: true },
+      { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true }
+    ];
+    
+    // Other fields
+    const otherFields = [
       { label: 'Price €/m', value: supplier.price_eur_per_m },
       { label: 'MOQ (m)', value: supplier.moq_m },
       { label: 'Lead Time (weeks)', value: supplier.lead_time_weeks },
       { label: 'Weight (g/m²)', value: supplier.weight_gm2 },
       { label: 'Gross Width (cm)', value: supplier.gross_width },
       { label: 'Price per Article (€)', value: supplier.price },
-      { label: 'Number of Articles', value: supplier.numberOfReferences },
-      { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)}):`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A' },
-      { label: 'Traceability Fields', value: `${traceabilityCount}/5` }
+      { label: 'Number of Articles', value: supplier.numberOfReferences }
     ];
     
-    fields.forEach(field => {
-      // Always show Ecobalyse Score and Traceability Fields, even if empty
-      const alwaysShow = field.label.includes('Ecobalyse Score') || field.label === 'Traceability Fields';
-      if (alwaysShow || (field.value !== undefined && field.value !== null && field.value !== '')) {
+    // Render highlight fields first (on their own row)
+    const highlightRow = document.createElement('div');
+    highlightRow.className = 'supplier-details-highlight';
+    highlightFields.forEach(field => {
+      const detail = document.createElement('div');
+      detail.className = 'supplier-detail supplier-detail-highlight';
+      const label = document.createElement('span');
+      label.className = 'supplier-detail-label supplier-detail-label-bold';
+      label.textContent = field.label + ':';
+      const value = document.createElement('span');
+      value.className = 'supplier-detail-value';
+      value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
+      detail.appendChild(label);
+      detail.appendChild(value);
+      highlightRow.appendChild(detail);
+    });
+    details.appendChild(highlightRow);
+    
+    // Render other fields in a grid container
+    const otherFieldsContainer = document.createElement('div');
+    otherFieldsContainer.className = 'supplier-details-regular';
+    otherFields.forEach(field => {
+      // Show field if it has a value (including 0)
+      if (field.value !== undefined && field.value !== null && field.value !== '') {
         const detail = document.createElement('div');
         detail.className = 'supplier-detail';
         const label = document.createElement('span');
@@ -188,9 +224,12 @@ function renderSuppliers(suppliers) {
         value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
         detail.appendChild(label);
         detail.appendChild(value);
-        details.appendChild(detail);
+        otherFieldsContainer.appendChild(detail);
       }
     });
+    if (otherFieldsContainer.children.length > 0) {
+      details.appendChild(otherFieldsContainer);
+    }
     
     item.appendChild(details);
     
@@ -200,11 +239,11 @@ function renderSuppliers(suppliers) {
     const editBtn = document.createElement('button');
     editBtn.className = 'supplier-btn supplier-btn-edit';
     editBtn.textContent = 'Edit';
-    editBtn.onclick = () => editSupplier(index, supplier);
+    editBtn.onclick = () => editSupplier(actualIndex, supplier);
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'supplier-btn supplier-btn-delete';
     deleteBtn.textContent = 'Delete';
-    deleteBtn.onclick = () => deleteSupplier(index, supplier.supplier);
+    deleteBtn.onclick = () => deleteSupplier(actualIndex, supplier.supplier);
     actions.appendChild(editBtn);
     actions.appendChild(deleteBtn);
     item.appendChild(actions);
@@ -235,65 +274,117 @@ function editSupplier(index, supplier) {
   // Store edit index
   document.getElementById('supplierForm').dataset.editIndex = index;
   
-  // Pre-fill form with supplier data
-  document.querySelector('input[name="supplier"]').value = supplier.supplier || '';
-  // Store product value to set after enums load
-  const productValue = supplier.product;
-  if (supplier.businessSize) {
-    document.getElementById('businessSizeSelect').value = supplier.businessSize;
-  }
-  
-  // Fill country selects
-  if (supplier.countrySpinning) document.getElementById('spinningCountrySelect').value = supplier.countrySpinning;
-  if (supplier.countryFabric) document.getElementById('fabricCountrySelect').value = supplier.countryFabric;
-  if (supplier.countryDyeing) document.getElementById('dyeingCountrySelect').value = supplier.countryDyeing;
-  if (supplier.countryMaking) document.getElementById('makingCountrySelect').value = supplier.countryMaking;
-  
-  // Fill production specs
-  if (supplier.fabricProcess) document.getElementById('fabricProcessSelect').value = supplier.fabricProcess;
-  if (supplier.dyeingProcess) document.getElementById('dyeingProcessSelect').value = supplier.dyeingProcess;
-  if (supplier.makingComplexity) document.getElementById('makingComplexitySelect').value = supplier.makingComplexity;
-  if (supplier.gross_width) document.querySelector('input[name="gross_width"]').value = supplier.gross_width;
-  if (supplier.weight_gm2) document.querySelector('input[name="weight_gm2"]').value = supplier.weight_gm2;
-  if (supplier.price_eur_per_m) document.querySelector('input[name="price_eur_per_m"]').value = supplier.price_eur_per_m;
-  if (supplier.moq_m) document.querySelector('input[name="moq_m"]').value = supplier.moq_m;
-  if (supplier.numberOfReferences) document.querySelector('input[name="numberOfReferences"]').value = supplier.numberOfReferences;
-  if (supplier.price) document.querySelector('input[name="price"]').value = supplier.price;
-  if (supplier.lead_time_weeks) document.querySelector('input[name="lead_time_weeks"]').value = supplier.lead_time_weeks;
+  // Store all supplier values before loading enums (which will clear selects)
+  const supplierValues = {
+    supplier: supplier.supplier || '',
+    product: supplier.product,
+    businessSize: supplier.businessSize,
+    countrySpinning: supplier.countrySpinning,
+    countryFabric: supplier.countryFabric,
+    countryDyeing: supplier.countryDyeing,
+    countryMaking: supplier.countryMaking,
+    fabricProcess: supplier.fabricProcess,
+    dyeingProcess: supplier.dyeingProcess,
+    makingComplexity: supplier.makingComplexity,
+    gross_width: supplier.gross_width,
+    weight_gm2: supplier.weight_gm2,
+    price_eur_per_m: supplier.price_eur_per_m,
+    moq_m: supplier.moq_m,
+    numberOfReferences: supplier.numberOfReferences,
+    price: supplier.price,
+    lead_time_weeks: supplier.lead_time_weeks,
+    material_origin: supplier.material_origin
+  };
   
   // Update modal title
   document.querySelector('.modal-content h2').textContent = 'Edit Supplier Information';
   
   // Open modal
   modal.classList.add('active');
+  
+  // Load enums first (this will clear all selects)
   loadEnums();
   
-  // Fill product select after enums load (products enum needs to be loaded first)
-  // Try multiple times to ensure the select is populated
-  const setProductValue = () => {
-    if (productValue) {
-      const productSelect = document.getElementById('productSelect');
-      if (productSelect && productSelect.options.length > 0) {
-        productSelect.value = productValue;
-      } else {
-        // Retry after a short delay if options aren't loaded yet
-        setTimeout(setProductValue, 100);
+  // Function to restore all form values after enums are loaded
+  const restoreFormValues = () => {
+    // Fill text inputs immediately (they don't get cleared)
+    if (supplierValues.supplier) {
+      document.querySelector('input[name="supplier"]').value = supplierValues.supplier;
+    }
+    if (supplierValues.gross_width) {
+      document.querySelector('input[name="gross_width"]').value = supplierValues.gross_width;
+    }
+    if (supplierValues.weight_gm2) {
+      document.querySelector('input[name="weight_gm2"]').value = supplierValues.weight_gm2;
+    }
+    if (supplierValues.price_eur_per_m) {
+      document.querySelector('input[name="price_eur_per_m"]').value = supplierValues.price_eur_per_m;
+    }
+    if (supplierValues.moq_m) {
+      document.querySelector('input[name="moq_m"]').value = supplierValues.moq_m;
+    }
+    if (supplierValues.numberOfReferences) {
+      document.querySelector('input[name="numberOfReferences"]').value = supplierValues.numberOfReferences;
+    }
+    if (supplierValues.price) {
+      document.querySelector('input[name="price"]').value = supplierValues.price;
+    }
+    if (supplierValues.lead_time_weeks) {
+      document.querySelector('input[name="lead_time_weeks"]').value = supplierValues.lead_time_weeks;
+    }
+    
+    // Fill select dropdowns - check if options are loaded first
+    const selectIds = [
+      { id: 'productSelect', value: supplierValues.product },
+      { id: 'businessSizeSelect', value: supplierValues.businessSize },
+      { id: 'spinningCountrySelect', value: supplierValues.countrySpinning },
+      { id: 'fabricCountrySelect', value: supplierValues.countryFabric },
+      { id: 'dyeingCountrySelect', value: supplierValues.countryDyeing },
+      { id: 'makingCountrySelect', value: supplierValues.countryMaking },
+      { id: 'fabricProcessSelect', value: supplierValues.fabricProcess },
+      { id: 'dyeingProcessSelect', value: supplierValues.dyeingProcess },
+      { id: 'makingComplexitySelect', value: supplierValues.makingComplexity }
+    ];
+    
+    let allSelectsReady = true;
+    selectIds.forEach(({ id, value }) => {
+      if (value) {
+        const select = document.getElementById(id);
+        if (select && select.options.length > 0) {
+          select.value = value;
+        } else {
+          allSelectsReady = false;
+        }
       }
+    });
+    
+    // If all selects are ready, also restore materials
+    if (allSelectsReady) {
+      const materialsSection = document.getElementById('materialsSection');
+      materialsSection.innerHTML = '';
+      if (supplierValues.material_origin && Array.isArray(supplierValues.material_origin)) {
+        fetchMaterialEnums(() => {
+          supplierValues.material_origin.forEach(mat => {
+            createMaterialRow(mat);
+          });
+          updateMatSharesSum();
+        });
+      }
+      return true; // All values restored
+    }
+    return false; // Need to retry
+  };
+  
+  // Retry restoring values until all selects are populated
+  const tryRestoreValues = () => {
+    const success = restoreFormValues();
+    if (!success) {
+      setTimeout(tryRestoreValues, 100);
     }
   };
-  setTimeout(setProductValue, 100);
   
-  // Fill material_origin after materials data loads
-  const materialsSection = document.getElementById('materialsSection');
-  materialsSection.innerHTML = '';
-  if (supplier.material_origin && Array.isArray(supplier.material_origin)) {
-    fetchMaterialEnums(() => {
-      supplier.material_origin.forEach(mat => {
-        createMaterialRow(mat);
-      });
-      updateMatSharesSum();
-    });
-  }
+  // Start trying to restore values after a short delay
+  setTimeout(tryRestoreValues, 100);
 }
 
 // Material row button handler
@@ -305,48 +396,70 @@ document.getElementById('addMaterialBtn').onclick = () => {
   }
 };
 
-// Form submission handler
-document.getElementById('supplierForm').onsubmit = function(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  let obj = {};
-  for (let [k, v] of fd.entries()) {
-    if (k === 'material_origin') continue;
-    else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences') || k.endsWith('lead_time_weeks')) { obj[k] = parseFloat(v); }
-    else { obj[k] = v; }
-  }
-  obj['material_origin'] = getMaterialOriginFromForm();
-  const totalShare = obj['material_origin'].reduce((acc, v) => acc + v.share, 0);
-  if (totalShare > 1.0001 || obj['material_origin'].some(m => isNaN(m.share) || m.share < 0.01 || m.share > 1)) {
-    document.getElementById('matOriginWarn').style.display = '';
-    document.getElementById('matOriginWarn').innerText = 'Material shares total must not exceed 1 and all shares must be between 0.01 and 1.';
-    return;
-  }
-  const editIndex = e.target.dataset.editIndex;
-  const isEdit = editIndex !== undefined && editIndex !== '';
-  const url = isEdit ? `/api/suppliers/${editIndex}` : '/api/suppliers';
-  const method = isEdit ? 'PUT' : 'POST';
-  
-  fetch(url, { method: method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(obj)}).then(resp => {
-    if (resp.ok) {
-      document.getElementById('status').innerText = isEdit ? 'Supplier updated!' : 'Supplier saved!';
-      // Reload suppliers list if it's visible
-      if (suppliersSection.classList.contains('active')) {
-        loadSuppliers();
+// Form submission handler with duplicate prevention
+let isSubmitting = false;
+const form = document.getElementById('supplierForm');
+if (form) {
+  // Remove any existing handlers to prevent duplicates
+  form.onsubmit = null;
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
+    
+    // Prevent duplicate submissions
+    if (isSubmitting) {
+      return false;
+    }
+    isSubmitting = true;
+    
+    const fd = new FormData(e.target);
+    let obj = {};
+    for (let [k, v] of fd.entries()) {
+      if (k === 'material_origin') continue;
+      else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences') || k.endsWith('lead_time_weeks')) { obj[k] = parseFloat(v); }
+      else { obj[k] = v; }
+    }
+    obj['material_origin'] = getMaterialOriginFromForm();
+    const totalShare = obj['material_origin'].reduce((acc, v) => acc + v.share, 0);
+    if (totalShare > 1.0001 || obj['material_origin'].some(m => isNaN(m.share) || m.share < 0.01 || m.share > 1)) {
+      document.getElementById('matOriginWarn').style.display = '';
+      document.getElementById('matOriginWarn').innerText = 'Material shares total must not exceed 1 and all shares must be between 0.01 and 1.';
+      isSubmitting = false;
+      return false;
+    }
+    const editIndex = e.target.dataset.editIndex;
+    const isEdit = editIndex !== undefined && editIndex !== '';
+    const url = isEdit ? `/api/suppliers/${editIndex}` : '/api/suppliers';
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    fetch(url, { method: method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(obj)}).then(resp => {
+      isSubmitting = false; // Reset flag after request completes
+      if (resp.ok) {
+        document.getElementById('status').innerText = isEdit ? 'Supplier updated!' : 'Supplier saved!';
+        // Reload suppliers list if it's visible
+        if (suppliersSection.classList.contains('active')) {
+          loadSuppliers();
+        }
+        // Refresh radar charts
+        if (typeof refreshRadarCharts === 'function') {
+          refreshRadarCharts();
+        }
+        setTimeout(() => {
+          e.target.reset();
+          e.target.dataset.editIndex = '';
+          document.getElementById('materialsSection').innerHTML = '';
+          document.getElementById('status').innerText = '';
+          document.querySelector('.modal-content h2').textContent = 'Enter Supplier Information';
+          modal.classList.remove('active');
+        }, 1500);
+      } else {
+        resp.text().then(t => document.getElementById('status').innerText = 'Error: '+t);
       }
-      // Refresh radar charts
-      if (typeof refreshRadarCharts === 'function') {
-        refreshRadarCharts();
-      }
-      setTimeout(() => {
-        e.target.reset();
-        e.target.dataset.editIndex = '';
-        document.getElementById('materialsSection').innerHTML = '';
-        document.getElementById('status').innerText = '';
-        document.querySelector('.modal-content h2').textContent = 'Enter Supplier Information';
-        modal.classList.remove('active');
-      }, 1500);
-    } else resp.text().then(t => document.getElementById('status').innerText = 'Error: '+t);
+    }).catch(err => {
+      isSubmitting = false; // Reset flag on error
+      document.getElementById('status').innerText = 'Error: ' + err;
+    });
+    return false;
   });
-};
+}
 

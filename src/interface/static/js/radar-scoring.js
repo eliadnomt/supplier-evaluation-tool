@@ -194,6 +194,60 @@ function calculateRadarScores(suppliers) {
   });
 }
 
+// Global supplier color mapping - ensures each supplier has a unique color across all charts
+const supplierColors = new Map();
+
+/**
+ * Convert hex color to RGB
+ */
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+/**
+ * Get a unique color for a supplier
+ * Uses the provided hex color palette
+ */
+function getSupplierColor(supplierName) {
+  if (supplierColors.has(supplierName)) {
+    return supplierColors.get(supplierName);
+  }
+  
+  // User-provided color palette (22 colors)
+  const hexColorPalette = [
+    '#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', 
+    '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990', '#dcbeff', 
+    '#9A6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', 
+    '#000075', '#a9a9a9', '#ffffff', '#000000'
+  ];
+  
+  const colorIndex = supplierColors.size % hexColorPalette.length;
+  const hexColor = hexColorPalette[colorIndex];
+  let rgb = hexToRgb(hexColor);
+  
+  if (!rgb) {
+    // Fallback to black if parsing fails
+    rgb = { r: 0, g: 0, b: 0 };
+  }
+  
+  const colorObj = {
+    backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`,
+    borderColor: hexColor,
+    pointBackgroundColor: hexColor,
+    pointBorderColor: '#fff',
+    pointHoverBackgroundColor: '#fff',
+    pointHoverBorderColor: hexColor
+  };
+  
+  supplierColors.set(supplierName, colorObj);
+  return colorObj;
+}
+
 /**
  * Get radar chart data structure ready for charting library
  * Returns data in format expected by common radar chart libraries
@@ -203,23 +257,20 @@ function getRadarChartData(suppliers) {
   
   return {
     labels: ['Ecobalyse', 'Transparency', 'Price', 'Lead Time', 'MOQ'],
-    datasets: scores.map((score, index) => ({
-      label: score.supplier,
-      data: [
-        score.ecobalyse,
-        score.transparency,
-        score.price,
-        score.leadTime,
-        score.moq
-      ],
-      // Color can be assigned based on index or supplier
-      backgroundColor: `rgba(${100 + index * 50}, ${150 + index * 30}, ${200 + index * 20}, 0.2)`,
-      borderColor: `rgba(${100 + index * 50}, ${150 + index * 30}, ${200 + index * 20}, 1)`,
-      pointBackgroundColor: `rgba(${100 + index * 50}, ${150 + index * 30}, ${200 + index * 20}, 1)`,
-      pointBorderColor: '#fff',
-      pointHoverBackgroundColor: '#fff',
-      pointHoverBorderColor: `rgba(${100 + index * 50}, ${150 + index * 30}, ${200 + index * 20}, 1)`
-    }))
+    datasets: scores.map((score) => {
+      const colors = getSupplierColor(score.supplier);
+      return {
+        label: score.supplier,
+        data: [
+          score.ecobalyse,
+          score.transparency,
+          score.price,
+          score.leadTime,
+          score.moq
+        ],
+        ...colors
+      };
+    })
   };
 }
 
