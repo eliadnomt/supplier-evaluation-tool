@@ -57,15 +57,44 @@ viewBtn.onclick = () => {
 
 function loadSuppliers() {
   suppliersList.innerHTML = '<div class="suppliers-loading">Loading suppliers...</div>';
-  fetch('/api/suppliers/all').then(r=>r.json()).then(suppliers => {
+  // Use for-radar endpoint to get suppliers with Ecobalyse scores
+  fetch('/api/suppliers/for-radar').then(r=>r.json()).then(suppliers => {
     if (!suppliers || suppliers.length === 0) {
       suppliersList.innerHTML = '<div class="suppliers-empty">No suppliers found. Add a supplier to get started.</div>';
       return;
     }
-    renderSuppliers(suppliers);
+    // Filter out suppliers with errors
+    const validSuppliers = suppliers.filter(s => !s.error);
+    renderSuppliers(validSuppliers);
   }).catch(err => {
     suppliersList.innerHTML = '<div class="suppliers-empty">Error loading suppliers: ' + err + '</div>';
   });
+}
+
+// Helper function to count traceability fields
+function calculateTraceabilityCount(supplier) {
+  let count = 0;
+  // Step 1: Fibre/Material origin
+  if (supplier.material_origin && supplier.material_origin.length > 0) {
+    count++;
+  }
+  // Step 2: Spinning
+  if (supplier.countrySpinning) {
+    count++;
+  }
+  // Step 3: Weaving/Knitting (fabric)
+  if (supplier.countryFabric || supplier.fabricProcess) {
+    count++;
+  }
+  // Step 4: Dyeing/Finishing
+  if (supplier.countryDyeing || supplier.dyeingProcess) {
+    count++;
+  }
+  // Step 5: Making
+  if (supplier.countryMaking) {
+    count++;
+  }
+  return count;
 }
 
 function renderSuppliers(suppliers) {
@@ -82,6 +111,9 @@ function renderSuppliers(suppliers) {
     const details = document.createElement('div');
     details.className = 'supplier-details';
     
+    // Calculate traceability count (number of known production steps)
+    const traceabilityCount = calculateTraceabilityCount(supplier);
+    
     const fields = [
       { label: 'Price €/m', value: supplier.price_eur_per_m },
       { label: 'MOQ (m)', value: supplier.moq_m },
@@ -90,11 +122,14 @@ function renderSuppliers(suppliers) {
       { label: 'Gross Width (cm)', value: supplier.gross_width },
       { label: 'Price per Article (€)', value: supplier.price },
       { label: 'Number of Articles', value: supplier.numberOfReferences },
-      { label: 'Stock Service', value: supplier.stock_service ? 'Yes' : 'No' }
+      { label: 'Ecobalyse Score', value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A' },
+      { label: 'Traceability Fields', value: `${traceabilityCount}/5` }
     ];
     
     fields.forEach(field => {
-      if (field.value !== undefined && field.value !== null && field.value !== '') {
+      // Always show Ecobalyse Score and Traceability Fields, even if empty
+      const alwaysShow = field.label === 'Ecobalyse Score' || field.label === 'Traceability Fields';
+      if (alwaysShow || (field.value !== undefined && field.value !== null && field.value !== '')) {
         const detail = document.createElement('div');
         detail.className = 'supplier-detail';
         const label = document.createElement('span');
@@ -102,7 +137,7 @@ function renderSuppliers(suppliers) {
         label.textContent = field.label + ':';
         const value = document.createElement('span');
         value.className = 'supplier-detail-value';
-        value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : field.value;
+        value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
         detail.appendChild(label);
         detail.appendChild(value);
         details.appendChild(detail);

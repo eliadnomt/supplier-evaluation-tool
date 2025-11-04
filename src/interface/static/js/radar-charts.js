@@ -77,15 +77,40 @@ function groupSuppliersByMaterial(suppliers) {
  * Create or update a radar chart
  */
 function createRadarChart(canvasId, suppliers) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) {
-    console.error(`Canvas element ${canvasId} not found`);
+  // Find or create canvas element
+  let canvas = document.getElementById(canvasId);
+  const container = document.querySelector(`#${canvasId}`)?.closest('.chart-container') || 
+                    document.querySelector(`.chart-container .chart-title:contains("${canvasId.replace('Chart', '').toUpperCase()}")`)?.closest('.chart-container');
+  
+  if (!container) {
+    console.error(`Chart container for ${canvasId} not found`);
     return;
+  }
+  
+  // If canvas doesn't exist, check for placeholder
+  if (!canvas) {
+    const placeholder = container.querySelector('.chart-placeholder');
+    if (placeholder) {
+      canvas = document.createElement('canvas');
+      canvas.id = canvasId;
+      container.replaceChild(canvas, placeholder);
+    } else {
+      // Create canvas after title
+      canvas = document.createElement('canvas');
+      canvas.id = canvasId;
+      const title = container.querySelector('.chart-title');
+      if (title && title.nextSibling) {
+        container.insertBefore(canvas, title.nextSibling);
+      } else {
+        container.insertBefore(canvas, container.firstChild.nextSibling);
+      }
+    }
   }
   
   // Destroy existing chart if it exists
   if (radarCharts[canvasId]) {
     radarCharts[canvasId].destroy();
+    delete radarCharts[canvasId];
   }
   
   // Get chart data
@@ -93,11 +118,28 @@ function createRadarChart(canvasId, suppliers) {
   
   if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
     // Show placeholder message
-    canvas.parentElement.innerHTML = '<div class="chart-placeholder">No suppliers for this material category</div>';
+    if (canvas && container) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'chart-placeholder';
+      placeholder.innerHTML = 'No suppliers for this material category';
+      // Replace canvas with placeholder
+      container.replaceChild(placeholder, canvas);
+    }
     return;
   }
   
-  // Create Chart.js radar chart
+  // Ensure canvas exists (replace placeholder if needed)
+  if (!canvas) {
+    const placeholder = container.querySelector('.chart-placeholder');
+    if (placeholder) {
+      canvas = document.createElement('canvas');
+      canvas.id = canvasId;
+      container.replaceChild(canvas, placeholder);
+    }
+  }
+  
+  if (!canvas) return;
+  
   radarCharts[canvasId] = new Chart(canvas, {
     type: 'radar',
     data: chartData,
@@ -110,8 +152,7 @@ function createRadarChart(canvasId, suppliers) {
           min: 0,
           max: 10,
           ticks: {
-            stepSize: 2,
-            showLabelBackdrop: false
+            display: false // Hide axis labels (2, 4, 6, 8, 10)
           },
           pointLabels: {
             font: {

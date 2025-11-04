@@ -81,6 +81,34 @@ h1 {
   margin-top: 15px;
   flex-wrap: wrap;
 }
+.chart-reading-section {
+  max-width: 900px;
+  margin: 0 auto 60px;
+  padding: 30px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+.chart-reading-section h3 {
+  font-size: 18px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.chart-reading-section p {
+  margin-bottom: 15px;
+  line-height: 1.6;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: #333;
+}
+.chart-reading-section strong {
+  font-weight: 300;
+  color: #000;
+}
 .legend-item {
   display: flex;
   align-items: center;

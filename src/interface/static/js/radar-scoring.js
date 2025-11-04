@@ -68,17 +68,26 @@ function calculateTransparencyScore(supplier) {
 /**
  * Normalize a value to 0-10 scale where lower values are better
  * Formula: score = 10 * (1 - (value - min) / (max - min))
- * If all values are the same or only one supplier, return 5 (neutral)
+ * - When value = min (lowest): score = 10 (best)
+ * - When value = max (highest): score = 0 (worst)
+ * - When all values are the same or only one supplier, return 5 (neutral)
  */
 function normalizeLowerIsBetter(value, min, max) {
-  if (min === max || min === undefined || max === undefined) {
+  // Handle edge cases
+  if (min === undefined || max === undefined || min === max) {
     return 5; // Neutral score when no variation
   }
-  if (min === max) {
-    return 5; // All same values
-  }
+  
+  // Normalize value to 0-1 range (0 = min, 1 = max)
   const normalized = (value - min) / (max - min);
-  return 10 * (1 - normalized); // Invert so lower is better
+  
+  // Invert so that lower values get higher scores
+  // normalized = 0 (min) -> score = 10 (best)
+  // normalized = 1 (max) -> score = 0 (worst)
+  const score = 10 * (1 - normalized);
+  
+  // Clamp to 0-10 range (shouldn't be needed, but safety check)
+  return Math.max(0, Math.min(10, score));
 }
 
 /**

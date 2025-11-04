@@ -42,3 +42,22 @@
   price: 340.0
   weight_gm2: 110.0
   gross_width: 140.0
+- supplier: Albini cotton shirt
+  price_eur_per_m: 20.0
+  moq_m: 50.0
+  material_origin:
+  - id: ei-coton-organic
+    share: 1.0
+    spinning: ConventionalSpinning
+  countrySpinning: Pays inconnu (par défaut)
+  countryFabric: Région - Europe de l'Ouest
+  countryDyeing: Région - Europe de l'Ouest
+  countryMaking: France
+  fabricProcess: weaving
+  dyeingProcess: average
+  makingComplexity: very-high
+  businessSize: large-business-without-services
+  numberOfReferences: 30
+  price: 348.0
+  weight_gm2: 110.0
+  gross_width: 148.0
