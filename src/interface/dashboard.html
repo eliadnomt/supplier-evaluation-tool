@@ -371,11 +371,15 @@
     }
     .supplier-detail {
       display: flex;
-      justify-content: space-between;
+      gap: 5px;
     }
     .supplier-detail-label {
       font-weight: 300;
       color: #999;
+    }
+    .supplier-detail-value {
+      color: #333;
+      font-weight: 300;
     }
     .suppliers-loading {
       text-align: center;
@@ -390,6 +394,86 @@
       color: #999;
       font-size: 12px;
       text-transform: none;
+    }
+    /* Ecobalyse Info Modal */
+    .info-modal-content {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: auto;
+      padding: 40px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .info-modal-content h2 {
+      margin-bottom: 30px;
+      font-size: 24px;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+    .info-modal-content h3 {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+    .info-modal-content p {
+      margin-bottom: 15px;
+      line-height: 1.6;
+      font-size: 14px;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      color: #333;
+    }
+    .info-modal-content ul {
+      margin-bottom: 20px;
+      padding-left: 30px;
+    }
+    .info-modal-content li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+      font-size: 14px;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      color: #333;
+    }
+    .info-section {
+      margin-bottom: 30px;
+    }
+    .constant-fields, .adjustable-fields {
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+    .constant-fields h4, .adjustable-fields h4 {
+      font-size: 14px;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 15px;
+      color: #000;
+    }
+    .field-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      color: #666;
+    }
+    .field-item {
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
     }
   </style>
 </head>
@@ -450,6 +534,7 @@
     <div class="buttons-section">
       <button class="btn" id="addSupplierBtn">ADD SUPPLIER</button>
       <button class="btn" id="viewSuppliersBtn">VIEW SUPPLIERS</button>
+      <button class="btn" id="ecobalyseBtn">ECOBALYSE</button>
     </div>
 
     <div class="suppliers-section" id="suppliersSection">
@@ -471,7 +556,7 @@
     </div>
 
     <footer>
-      © 2025 – Site by Delia Montgomery
+      <p>© 2025 – Site by Delia Montgomery for ENAMOMA Bourrienne case study<br>Group: Juana Villate-Ricardo, Thayna Tavares, Delia Montgomery, Laura Lemos, Dorka Petrov</p>
     </footer>
   </div>
 
@@ -514,12 +599,74 @@
     </div>
   </div>
 
+  <!-- Modal for Ecobalyse Information -->
+  <div class="modal-overlay" id="ecobalyseModal">
+    <div class="info-modal-content">
+      <button class="modal-close" id="closeEcobalyseModal">&times;</button>
+      <h2>How This Tool Uses Ecobalyse</h2>
+      
+      <div class="info-section">
+        <p>This tool integrates with the Ecobalyse API to calculate environmental impact scores for textile suppliers. The Ecobalyse score provides a comprehensive environmental assessment based on multiple factors including material composition, production processes, and geographic locations.</p>
+      </div>
+
+      <div class="info-section">
+        <h3>Assumed Constant Fields</h3>
+        <p>The following fields are set to default values and remain constant across all supplier evaluations:</p>
+        <div class="constant-fields">
+          <h4>Constant Parameters</h4>
+          <div class="field-list">
+            <div class="field-item">Default Product Type</div>
+            <div class="field-item">Default Mass Calculation</div>
+            <div class="field-item">Default Fabric Process</div>
+            <div class="field-item">Default Making Complexity</div>
+            <div class="field-item">Default Number of References</div>
+            <div class="field-item">Default Price Assumption</div>
+            <!-- Placeholder for additional constant fields -->
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>Adjustable Fields Based on Supplier Information</h3>
+        <p>The following fields are dynamically adjusted based on the supplier data you provide:</p>
+        <div class="adjustable-fields">
+          <h4>Supplier-Specific Parameters</h4>
+          <div class="field-list">
+            <div class="field-item">Material Origin (composition & share)</div>
+            <div class="field-item">Country of Spinning</div>
+            <div class="field-item">Country of Fabric</div>
+            <div class="field-item">Country of Dyeing</div>
+            <div class="field-item">Country of Making</div>
+            <div class="field-item">Fabric Process</div>
+            <div class="field-item">Dyeing Process</div>
+            <div class="field-item">Making Complexity</div>
+            <div class="field-item">Business Size</div>
+            <div class="field-item">Weight (g/m²)</div>
+            <div class="field-item">Gross Width</div>
+            <div class="field-item">Number of Articles</div>
+            <div class="field-item">Price per Article</div>
+            <!-- Placeholder for additional adjustable fields -->
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3>How Scores Are Calculated</h3>
+        <p>The Ecobalyse API returns an environmental impact score (ECS) which is then combined with transparency weighting and certification bonuses to produce the final CSR score displayed in the comparison view.</p>
+        <p>For more detailed information about Ecobalyse methodology, please visit the official Ecobalyse documentation.</p>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Modal control
     const modal = document.getElementById('addSupplierModal');
     const addBtn = document.getElementById('addSupplierBtn');
     const closeBtn = document.getElementById('closeModal');
     const viewBtn = document.getElementById('viewSuppliersBtn');
+    const ecobalyseBtn = document.getElementById('ecobalyseBtn');
+    const ecobalyseModal = document.getElementById('ecobalyseModal');
+    const closeEcobalyseBtn = document.getElementById('closeEcobalyseModal');
 
     addBtn.onclick = () => {
       // Reset form and remove edit mode
@@ -539,6 +686,20 @@
     modal.onclick = (e) => {
       if (e.target === modal) {
         modal.classList.remove('active');
+      }
+    };
+
+    ecobalyseBtn.onclick = () => {
+      ecobalyseModal.classList.add('active');
+    };
+
+    closeEcobalyseBtn.onclick = () => {
+      ecobalyseModal.classList.remove('active');
+    };
+
+    ecobalyseModal.onclick = (e) => {
+      if (e.target === ecobalyseModal) {
+        ecobalyseModal.classList.remove('active');
       }
     };
 
