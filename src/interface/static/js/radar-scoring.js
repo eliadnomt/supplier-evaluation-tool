@@ -3,9 +3,9 @@
  * 
  * This module implements the radar chart scoring behavior for supplier comparison.
  * 
- * Radar Chart Axes (0-10 scale):
+ * Radar Chart Axes (1-9 scale):
  * 1. Ecobalyse impact - Normalized relative to suppliers (lower is better)
- * 2. Transparency - Based on traceable production steps (0-10, not relative)
+ * 2. Transparency - Based on traceable production steps (1-9, not relative)
  * 3. Price - Normalized relative to suppliers (lower is better)
  * 4. Lead Time - Normalized relative to suppliers (lower is better)
  * 5. Minimum Order Quantity - Normalized relative to suppliers (lower is better)
@@ -13,11 +13,12 @@
  * Normalization Rules:
  * - For Ecobalyse, Price, Lead Time, MOQ: Values are normalized using min/max among current suppliers
  * - Lower values are considered better
+ * - Scores range from 1 (worst) to 9 (best)
  * - If all suppliers have the same value (or only one supplier), score defaults to 5
  * 
  * Transparency Calculation:
  * - Counts traceable production steps: fibre, spinning, weaving/knitting, dyeing/finishing, making
- * - Score = (known steps / 5 total steps) × 10
+ * - Score = (known steps / 5 total steps) × 10, then scaled to 1-9 range
  * - Not scaled relative to other suppliers
  * 
  * Single Supplier Behavior:
@@ -36,7 +37,19 @@
 function calculateTransparencyScore(supplier) {
   const totalSteps = 5;
   let knownSteps = 0;
-  const unknownValues = ['Pays Inconnu', '---', 'Pays Inconnu', 'pays inconnu', 'pays inconnu'];
+  const unknownValues = ['pays inconnu', '---'];
+  
+  // Helper function to check if a value is unknown (case-insensitive)
+  // Handles "Pays inconnu", "Pays inconnu (par défaut)", "---", etc.
+  const isUnknown = (value) => {
+    if (!value) return true;
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === '') return true;
+    // Check if it contains "pays inconnu" (handles "Pays inconnu (par défaut)")
+    if (normalized.includes('pays inconnu')) return true;
+    // Check for exact matches
+    return unknownValues.includes(normalized);
+  };
   
   // Step 1: Fibre/Material origin
   if (supplier.material_origin && supplier.material_origin.length > 0) {
@@ -44,28 +57,24 @@ function calculateTransparencyScore(supplier) {
   }
   
   // Step 2: Spinning (only count if not unknown)
-  if (supplier.countrySpinning && !unknownValues.includes(supplier.countrySpinning)) {
+  if (supplier.countrySpinning && !isUnknown(supplier.countrySpinning)) {
     knownSteps++;
   }
   
-  // Step 3: Weaving/Knitting (fabric) - only count countryFabric if not unknown
-  if (supplier.countryFabric && !unknownValues.includes(supplier.countryFabric)) {
-    knownSteps++;
-  } else if (supplier.fabricProcess) {
-    // If countryFabric is unknown but fabricProcess exists, still count it
+  // Step 3: Weaving/Knitting (fabric) - only count if countryFabric is not unknown
+  // If countryFabric is "Pays Inconnu", don't count this step regardless of fabricProcess
+  if (supplier.countryFabric && !isUnknown(supplier.countryFabric)) {
     knownSteps++;
   }
   
-  // Step 4: Dyeing/Finishing (only count countryDyeing if not unknown)
-  if (supplier.countryDyeing && !unknownValues.includes(supplier.countryDyeing)) {
-    knownSteps++;
-  } else if (supplier.dyeingProcess) {
-    // If countryDyeing is unknown but dyeingProcess exists, still count it
+  // Step 4: Dyeing/Finishing - only count if countryDyeing is not unknown
+  // If countryDyeing is "Pays Inconnu", don't count this step regardless of dyeingProcess
+  if (supplier.countryDyeing && !isUnknown(supplier.countryDyeing)) {
     knownSteps++;
   }
   
   // Step 5: Making (only count if not unknown)
-  if (supplier.countryMaking && !unknownValues.includes(supplier.countryMaking)) {
+  if (supplier.countryMaking && !isUnknown(supplier.countryMaking)) {
     knownSteps++;
   }
   
@@ -73,10 +82,10 @@ function calculateTransparencyScore(supplier) {
 }
 
 /**
- * Normalize a value to 0-10 scale where lower values are better
- * Formula: score = 10 * (1 - (value - min) / (max - min))
- * - When value = min (lowest): score = 10 (best)
- * - When value = max (highest): score = 0 (worst)
+ * Normalize a value to 1-9 scale where lower values are better
+ * Formula: score = 1 + 8 * (1 - (value - min) / (max - min))
+ * - When value = min (lowest): score = 9 (best)
+ * - When value = max (highest): score = 1 (worst)
  * - When all values are the same or only one supplier, return 5 (neutral)
  */
 function normalizeLowerIsBetter(value, min, max) {
@@ -89,12 +98,13 @@ function normalizeLowerIsBetter(value, min, max) {
   const normalized = (value - min) / (max - min);
   
   // Invert so that lower values get higher scores
-  // normalized = 0 (min) -> score = 10 (best)
-  // normalized = 1 (max) -> score = 0 (worst)
-  const score = 10 * (1 - normalized);
+  // normalized = 0 (min) -> score = 9 (best)
+  // normalized = 1 (max) -> score = 1 (worst)
+  // Scale to 1-9 range instead of 0-10
+  const score = 1 + 8 * (1 - normalized);
   
-  // Clamp to 0-10 range (shouldn't be needed, but safety check)
-  return Math.max(0, Math.min(10, score));
+  // Clamp to 1-9 range (shouldn't be needed, but safety check)
+  return Math.max(1, Math.min(9, score));
 }
 
 /**
@@ -106,12 +116,16 @@ function calculateRadarScores(suppliers) {
     return [];
   }
   
-  // Single supplier case: all axes score 5
+  // Single supplier case: all axes score 5 (neutral, within 1-9 range)
   if (suppliers.length === 1) {
+    // For transparency, still calculate normally but scale to 1-9
+    const transparencyRaw = calculateTransparencyScore(suppliers[0]);
+    const transparencyScaled = 1 + (transparencyRaw / 10) * 8; // Scale 0-10 to 1-9
+    
     return [{
       supplier: suppliers[0].supplier || 'Unknown',
       ecobalyse: 5,
-      transparency: 5,
+      transparency: transparencyScaled,
       price: 5,
       leadTime: 5,
       moq: 5
@@ -162,8 +176,10 @@ function calculateRadarScores(suppliers) {
       ? normalizeLowerIsBetter(supplier.moq_m, moqMin, moqMax)
       : 5;
     
-    // Transparency is calculated independently (not normalized)
-    const transparency = calculateTransparencyScore(supplier);
+    // Transparency is calculated independently (not normalized relative to other suppliers)
+    // Scale from 0-10 to 1-9 range
+    const transparencyRaw = calculateTransparencyScore(supplier);
+    const transparency = 1 + (transparencyRaw / 10) * 8; // Scale 0-10 to 1-9
     
     return {
       supplier: supplier.supplier || 'Unknown',

@@ -95,26 +95,38 @@ function loadSuppliers() {
 // Fields don't count if they are 'Pays Inconnu' or '---'
 function calculateTraceabilityCount(supplier) {
   let count = 0;
-  const unknownValues = ['Pays Inconnu', '---', 'Pays Inconnu', 'pays inconnu', 'pays inconnu'];
+  const unknownValues = ['pays inconnu', '---'];
+  
+  // Helper function to check if a value is unknown (case-insensitive)
+  // Handles "Pays inconnu", "Pays inconnu (par défaut)", "---", etc.
+  const isUnknown = (value) => {
+    if (!value) return true;
+    const normalized = String(value).trim().toLowerCase();
+    if (normalized === '') return true;
+    // Check if it contains "pays inconnu" (handles "Pays inconnu (par défaut)")
+    if (normalized.includes('pays inconnu')) return true;
+    // Check for exact matches
+    return unknownValues.includes(normalized);
+  };
   
   // Step 1: Fibre/Material origin
   if (supplier.material_origin && supplier.material_origin.length > 0) {
     count++;
   }
-  // Step 2: Spinning
-  if (supplier.countrySpinning && !unknownValues.includes(supplier.countrySpinning)) {
+  // Step 2: Spinning - only count if not unknown
+  if (supplier.countrySpinning && !isUnknown(supplier.countrySpinning)) {
     count++;
   }
-  // Step 3: Weaving/Knitting (fabric)
-  if (supplier.countryFabric && !unknownValues.includes(supplier.countryFabric)) {
+  // Step 3: Weaving/Knitting (fabric) - only count if country is not unknown
+  if (supplier.countryFabric && !isUnknown(supplier.countryFabric)) {
     count++;
   }
-  // Step 4: Dyeing/Finishing
-  if (supplier.countryDyeing && !unknownValues.includes(supplier.countryDyeing)) {
+  // Step 4: Dyeing/Finishing - only count if country is not unknown
+  if (supplier.countryDyeing && !isUnknown(supplier.countryDyeing)) {
     count++;
   }
-  // Step 5: Making
-  if (supplier.countryMaking && !unknownValues.includes(supplier.countryMaking)) {
+  // Step 5: Making - only count if not unknown
+  if (supplier.countryMaking && !isUnknown(supplier.countryMaking)) {
     count++;
   }
   return count;

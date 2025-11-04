@@ -52,12 +52,33 @@
   countrySpinning: Pays inconnu (par défaut)
   countryFabric: Pays inconnu (par défaut)
   countryDyeing: Pays inconnu (par défaut)
-  countryMaking: France
-  fabricProcess: weaving
+  countryMaking: Pays inconnu (par défaut)
+  fabricProcess: knitting-mix
   dyeingProcess: average
   makingComplexity: very-high
+  businessSize: small-business
+  numberOfReferences: 220
+  price: 350.0
+  weight_gm2: 100.0
+  gross_width: 150.0
+- supplier: Albini wool sweater
+  product: pull
+  price_eur_per_m: 30.0
+  lead_time_weeks: 8.0
+  moq_m: 200.0
+  material_origin:
+  - id: ei-laine-par-defaut
+    share: 1.0
+    spinning: ConventionalSpinning
+  countrySpinning: Pays inconnu (par défaut)
+  countryFabric: Pays inconnu (par défaut)
+  countryDyeing: Pays inconnu (par défaut)
+  countryMaking: Région - Europe de l'Ouest
+  fabricProcess: knitting-mix
+  dyeingProcess: average
+  makingComplexity: low
   businessSize: large-business-without-services
-  numberOfReferences: 200
-  price: 340.0
-  weight_gm2: 110.0
-  gross_width: 148.0
+  numberOfReferences: 150
+  price: 450.0
+  weight_gm2: 200.0
+  gross_width: 120.0

@@ -152,7 +152,7 @@ function createRadarChart(canvasId, suppliers) {
           min: 0,
           max: 10,
           ticks: {
-            display: false // Hide axis labels (2, 4, 6, 8, 10)
+            display: false // Hide axis labels
           },
           pointLabels: {
             font: {
@@ -227,9 +227,19 @@ async function loadAndRenderRadarCharts() {
     // Filter out suppliers with errors
     const validSuppliers = suppliers.filter(s => !s.error);
     
+    const chartsSection = document.querySelector('.charts-section');
+    
     if (validSuppliers.length === 0) {
-      // Show placeholders
+      // Hide charts section if no suppliers
+      if (chartsSection) {
+        chartsSection.style.display = 'none';
+      }
       return;
+    }
+    
+    // Show charts section when suppliers exist
+    if (chartsSection) {
+      chartsSection.style.display = '';
     }
     
     // Group suppliers by material
