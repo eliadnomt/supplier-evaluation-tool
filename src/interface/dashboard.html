@@ -33,7 +33,7 @@
       </div>
     </div>
 
-    <div class="chart-reading-section">
+    <div class="chart-reading-section" id="chartReadingSection" style="display: none;">
       <h3>HOW TO READ THESE CHARTS</h3>
       <p>All axes are scored on a 0 to 10 scale, where scores are relative to the suppliers currently being compared, not fixed benchmarks.</p>
       <p><strong>For Ecobalyse, Price, Lead Time, and MOQ:</strong> Lower values are better. Suppliers with the lowest values receive higher scores (closer to 10), while suppliers with the highest values receive lower scores (closer to 0). When new suppliers are added, scores automatically rescale to reflect the new range.</p>
@@ -45,6 +45,7 @@
       <button class="btn" id="addSupplierBtn">ADD SUPPLIER</button>
       <button class="btn" id="viewSuppliersBtn">VIEW SUPPLIERS</button>
       <button class="btn" id="ecobalyseBtn">ECOBALYSE</button>
+      <button class="btn" id="howToReadBtn">CHART EXPLAINER</button>
     </div>
 
     <div class="suppliers-section" id="suppliersSection">
@@ -78,7 +79,8 @@
       <form id="supplierForm">
         <label>Supplier Name: <input name="supplier" required></label>
         <label>Business Size: <select name="businessSize" id="businessSizeSelect"></select></label>
-        
+        <label>Garment type: <select name="product" id="productSelect"></select></label>
+
         <label id="mat-origin-label">Material origin:</label>
         <div id="materialsSection"></div>
         <button type="button" class="add-btn" id="addMaterialBtn">Add Material</button>
@@ -102,6 +104,7 @@
         <h3>Production run specifications</h3>
         <label>Number of articles: <input name="numberOfReferences" type="number" required></label>
         <label>Price per article (€): <input name="price" type="number" step="0.01" required></label>
+        <label>Lead Time (weeks): <input name="lead_time_weeks" type="number" step="1" required></label>
         
         <button type="submit" class="btn" style="margin-top: 20px;">Save Supplier</button>
         <div id="status"></div>
@@ -167,6 +170,7 @@
             <div class="field-item">Dyeing processing type</div>
             <div class="field-item">Gross fabric width (cm)</div>
             <div class="field-item">Weight (g/m²)</div>
+            <div class="field-item">Garment type</div>
             <div class="field-item">Garment production origin</div>
             <div class="field-item">Garment production complexity</div>
             <div class="field-item">Number of garments</div>

@@ -36,29 +36,36 @@
 function calculateTransparencyScore(supplier) {
   const totalSteps = 5;
   let knownSteps = 0;
+  const unknownValues = ['Pays Inconnu', '---', 'Pays Inconnu', 'pays inconnu', 'pays inconnu'];
   
   // Step 1: Fibre/Material origin
   if (supplier.material_origin && supplier.material_origin.length > 0) {
     knownSteps++;
   }
   
-  // Step 2: Spinning
-  if (supplier.countrySpinning) {
+  // Step 2: Spinning (only count if not unknown)
+  if (supplier.countrySpinning && !unknownValues.includes(supplier.countrySpinning)) {
     knownSteps++;
   }
   
-  // Step 3: Weaving/Knitting (fabric)
-  if (supplier.countryFabric || supplier.fabricProcess) {
+  // Step 3: Weaving/Knitting (fabric) - only count countryFabric if not unknown
+  if (supplier.countryFabric && !unknownValues.includes(supplier.countryFabric)) {
+    knownSteps++;
+  } else if (supplier.fabricProcess) {
+    // If countryFabric is unknown but fabricProcess exists, still count it
     knownSteps++;
   }
   
-  // Step 4: Dyeing/Finishing
-  if (supplier.countryDyeing || supplier.dyeingProcess) {
+  // Step 4: Dyeing/Finishing (only count countryDyeing if not unknown)
+  if (supplier.countryDyeing && !unknownValues.includes(supplier.countryDyeing)) {
+    knownSteps++;
+  } else if (supplier.dyeingProcess) {
+    // If countryDyeing is unknown but dyeingProcess exists, still count it
     knownSteps++;
   }
   
-  // Step 5: Making
-  if (supplier.countryMaking) {
+  // Step 5: Making (only count if not unknown)
+  if (supplier.countryMaking && !unknownValues.includes(supplier.countryMaking)) {
     knownSteps++;
   }
   
@@ -137,6 +144,8 @@ function calculateRadarScores(suppliers) {
   
   // Calculate scores for each supplier
   return suppliers.map(supplier => {
+    // Ecobalyse: Higher raw score = worse environmental impact = lower normalized score (closer to 0)
+    // Lower raw score = better environmental impact = higher normalized score (closer to 10)
     const ecobalyse = supplier.ecobalyse_score != null && !isNaN(supplier.ecobalyse_score)
       ? normalizeLowerIsBetter(supplier.ecobalyse_score, ecobalyseMin, ecobalyseMax)
       : 5;

@@ -36,6 +36,7 @@ def _cache_set(key, data):
 
 PREFERRED_FIELD_ORDER = [
     'supplier',
+    'product',
     'price_eur_per_m',
     'lead_time_weeks',
     'moq_m',
@@ -334,6 +335,10 @@ def suppliers_for_radar():
             score_result = final_csr_score(s, CONFIG_ROOT)
             ecobalyse_score = score_result[0] if score_result else None
             
+            # Get product type from supplier or assumptions
+            assumptions = load_yaml(f"{CONFIG_ROOT}/assumptions.yaml") or {}
+            product_type = s.product or assumptions.get("default_product", "tshirt")
+            
             # Build supplier data with all fields needed for radar chart
             supplier_data = {
                 'supplier': s.supplier,
@@ -341,6 +346,7 @@ def suppliers_for_radar():
                 'lead_time_weeks': s.lead_time_weeks,
                 'moq_m': s.moq_m,
                 'ecobalyse_score': ecobalyse_score,
+                'product': product_type,
                 'material_origin': s.material_origin,
                 'countrySpinning': s.countrySpinning,
                 'countryFabric': s.countryFabric,

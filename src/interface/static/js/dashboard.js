@@ -8,6 +8,8 @@ const viewBtn = document.getElementById('viewSuppliersBtn');
 const ecobalyseBtn = document.getElementById('ecobalyseBtn');
 const ecobalyseModal = document.getElementById('ecobalyseModal');
 const closeEcobalyseBtn = document.getElementById('closeEcobalyseModal');
+const howToReadBtn = document.getElementById('howToReadBtn');
+const chartReadingSection = document.getElementById('chartReadingSection');
 const suppliersSection = document.getElementById('suppliersSection');
 const suppliersList = document.getElementById('suppliersList');
 
@@ -18,6 +20,16 @@ addBtn.onclick = () => {
   document.getElementById('materialsSection').innerHTML = '';
   document.querySelector('.modal-content h2').textContent = 'Enter Supplier Information';
   document.getElementById('status').innerText = '';
+  // Reset material validation state
+  const addMaterialBtn = document.getElementById('addMaterialBtn');
+  if (addMaterialBtn) {
+    addMaterialBtn.disabled = false;
+  }
+  const matOriginWarn = document.getElementById('matOriginWarn');
+  if (matOriginWarn) {
+    matOriginWarn.style.display = 'none';
+    matOriginWarn.innerText = '';
+  }
   modal.classList.add('active');
   loadEnums();
 };
@@ -55,6 +67,14 @@ viewBtn.onclick = () => {
   }
 };
 
+howToReadBtn.onclick = () => {
+  if (chartReadingSection.style.display === 'none') {
+    chartReadingSection.style.display = 'block';
+  } else {
+    chartReadingSection.style.display = 'none';
+  }
+};
+
 function loadSuppliers() {
   suppliersList.innerHTML = '<div class="suppliers-loading">Loading suppliers...</div>';
   // Use for-radar endpoint to get suppliers with Ecobalyse scores
@@ -72,29 +92,45 @@ function loadSuppliers() {
 }
 
 // Helper function to count traceability fields
+// Fields don't count if they are 'Pays Inconnu' or '---'
 function calculateTraceabilityCount(supplier) {
   let count = 0;
+  const unknownValues = ['Pays Inconnu', '---', 'Pays Inconnu', 'pays inconnu', 'pays inconnu'];
+  
   // Step 1: Fibre/Material origin
   if (supplier.material_origin && supplier.material_origin.length > 0) {
     count++;
   }
   // Step 2: Spinning
-  if (supplier.countrySpinning) {
+  if (supplier.countrySpinning && !unknownValues.includes(supplier.countrySpinning)) {
     count++;
   }
   // Step 3: Weaving/Knitting (fabric)
-  if (supplier.countryFabric || supplier.fabricProcess) {
+  if (supplier.countryFabric && !unknownValues.includes(supplier.countryFabric)) {
     count++;
   }
   // Step 4: Dyeing/Finishing
-  if (supplier.countryDyeing || supplier.dyeingProcess) {
+  if (supplier.countryDyeing && !unknownValues.includes(supplier.countryDyeing)) {
     count++;
   }
   // Step 5: Making
-  if (supplier.countryMaking) {
+  if (supplier.countryMaking && !unknownValues.includes(supplier.countryMaking)) {
     count++;
   }
   return count;
+}
+
+// Helper function to get product type display name
+function getProductTypeDisplay(productType) {
+  const productMap = {
+    'chemise': 'Shirt',
+    'pull': 'Sweater',
+    'tshirt': 'T-Shirt',
+    'pantalon': 'Pants',
+    'jupe': 'Skirt',
+    'jean': 'Jeans'
+  };
+  return productMap[productType] || productType || 'Product';
 }
 
 function renderSuppliers(suppliers) {
@@ -122,13 +158,13 @@ function renderSuppliers(suppliers) {
       { label: 'Gross Width (cm)', value: supplier.gross_width },
       { label: 'Price per Article (€)', value: supplier.price },
       { label: 'Number of Articles', value: supplier.numberOfReferences },
-      { label: 'Ecobalyse Score', value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A' },
+      { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)}):`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A' },
       { label: 'Traceability Fields', value: `${traceabilityCount}/5` }
     ];
     
     fields.forEach(field => {
       // Always show Ecobalyse Score and Traceability Fields, even if empty
-      const alwaysShow = field.label === 'Ecobalyse Score' || field.label === 'Traceability Fields';
+      const alwaysShow = field.label.includes('Ecobalyse Score') || field.label === 'Traceability Fields';
       if (alwaysShow || (field.value !== undefined && field.value !== null && field.value !== '')) {
         const detail = document.createElement('div');
         detail.className = 'supplier-detail';
@@ -189,6 +225,8 @@ function editSupplier(index, supplier) {
   
   // Pre-fill form with supplier data
   document.querySelector('input[name="supplier"]').value = supplier.supplier || '';
+  // Store product value to set after enums load
+  const productValue = supplier.product;
   if (supplier.businessSize) {
     document.getElementById('businessSizeSelect').value = supplier.businessSize;
   }
@@ -209,6 +247,7 @@ function editSupplier(index, supplier) {
   if (supplier.moq_m) document.querySelector('input[name="moq_m"]').value = supplier.moq_m;
   if (supplier.numberOfReferences) document.querySelector('input[name="numberOfReferences"]').value = supplier.numberOfReferences;
   if (supplier.price) document.querySelector('input[name="price"]').value = supplier.price;
+  if (supplier.lead_time_weeks) document.querySelector('input[name="lead_time_weeks"]').value = supplier.lead_time_weeks;
   
   // Update modal title
   document.querySelector('.modal-content h2').textContent = 'Edit Supplier Information';
@@ -216,6 +255,21 @@ function editSupplier(index, supplier) {
   // Open modal
   modal.classList.add('active');
   loadEnums();
+  
+  // Fill product select after enums load (products enum needs to be loaded first)
+  // Try multiple times to ensure the select is populated
+  const setProductValue = () => {
+    if (productValue) {
+      const productSelect = document.getElementById('productSelect');
+      if (productSelect && productSelect.options.length > 0) {
+        productSelect.value = productValue;
+      } else {
+        // Retry after a short delay if options aren't loaded yet
+        setTimeout(setProductValue, 100);
+      }
+    }
+  };
+  setTimeout(setProductValue, 100);
   
   // Fill material_origin after materials data loads
   const materialsSection = document.getElementById('materialsSection');
@@ -246,7 +300,7 @@ document.getElementById('supplierForm').onsubmit = function(e) {
   let obj = {};
   for (let [k, v] of fd.entries()) {
     if (k === 'material_origin') continue;
-    else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences')) { obj[k] = parseFloat(v); }
+    else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences') || k.endsWith('lead_time_weeks')) { obj[k] = parseFloat(v); }
     else { obj[k] = v; }
   }
   obj['material_origin'] = getMaterialOriginFromForm();

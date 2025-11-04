@@ -103,6 +103,7 @@ function updateMatSharesSum() {
 }
 
 function loadEnums() {
+  fillSelect('productSelect', '/api/enums/products');
   fillSelect('spinningCountrySelect', '/api/enums/countries');
   fillSelect('fabricCountrySelect', '/api/enums/countries');
   fillSelect('dyeingCountrySelect', '/api/enums/countries');
