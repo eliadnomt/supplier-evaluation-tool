@@ -12,6 +12,13 @@ const howToReadBtn = document.getElementById('howToReadBtn');
 const chartReadingSection = document.getElementById('chartReadingSection');
 const suppliersSection = document.getElementById('suppliersSection');
 const suppliersList = document.getElementById('suppliersList');
+const weightedComparisonBtn = document.getElementById('weightedComparisonBtn');
+const weightedComparisonPanel = document.getElementById('weightedComparisonPanel');
+const closeWeightedPanel = document.getElementById('closeWeightedPanel');
+const chartSelector = document.getElementById('chartSelector');
+const getRecommendationBtn = document.getElementById('getRecommendationBtn');
+const recommendationResults = document.getElementById('recommendationResults');
+const recommendationContent = document.getElementById('recommendationContent');
 
 addBtn.onclick = () => {
   // Reset form and remove edit mode
@@ -74,6 +81,142 @@ howToReadBtn.onclick = () => {
     chartReadingSection.style.display = 'none';
   }
 };
+
+// Weighted Comparison Panel Controls
+weightedComparisonBtn.onclick = () => {
+  if (weightedComparisonPanel.style.display === 'none') {
+    weightedComparisonPanel.style.display = 'flex';
+    document.body.classList.add('weighted-panel-open');
+    updateChartSelector();
+  } else {
+    weightedComparisonPanel.style.display = 'none';
+    document.body.classList.remove('weighted-panel-open');
+  }
+};
+
+closeWeightedPanel.onclick = () => {
+  weightedComparisonPanel.style.display = 'none';
+  document.body.classList.remove('weighted-panel-open');
+};
+
+// Update chart selector dropdown with available categories
+function updateChartSelector() {
+  const chartsSection = document.querySelector('.charts-section');
+  if (!chartsSection) return;
+  
+  const chartContainers = chartsSection.querySelectorAll('.chart-container');
+  const chartSelect = document.getElementById('chartSelector');
+  
+  // Clear existing options except "All Charts"
+  chartSelect.innerHTML = '<option value="all">All Charts</option>';
+  
+  chartContainers.forEach(container => {
+    const title = container.querySelector('.chart-title');
+    if (title && container.style.display !== 'none') {
+      const titleText = title.textContent.trim();
+      const option = document.createElement('option');
+      option.value = titleText.toLowerCase();
+      option.textContent = titleText;
+      chartSelect.appendChild(option);
+    }
+  });
+}
+
+// Weight slider event handlers
+const weightSliders = ['ecobalyse', 'transparency', 'price', 'leadTime', 'moq'];
+weightSliders.forEach(axis => {
+  const slider = document.getElementById(axis + 'Weight');
+  const valueDisplay = document.getElementById(axis + 'WeightValue');
+  if (slider && valueDisplay) {
+    slider.addEventListener('input', (e) => {
+      valueDisplay.textContent = e.target.value;
+    });
+  }
+});
+
+// Get recommendation button handler
+getRecommendationBtn.onclick = async () => {
+  const selectedChart = chartSelector.value;
+  
+  // Get weights from sliders
+  const weights = {
+    ecobalyse: parseInt(document.getElementById('ecobalyseWeight').value),
+    transparency: parseInt(document.getElementById('transparencyWeight').value),
+    price: parseInt(document.getElementById('priceWeight').value),
+    leadTime: parseInt(document.getElementById('leadTimeWeight').value),
+    moq: parseInt(document.getElementById('moqWeight').value)
+  };
+  
+  // Fetch suppliers based on selected chart
+  try {
+    const response = await fetch('/api/suppliers/for-radar');
+    let suppliers = await response.json();
+    suppliers = suppliers.filter(s => !s.error);
+    
+    // Filter by chart if not "all"
+    if (selectedChart !== 'all') {
+      // Group suppliers by material category
+      const groups = groupSuppliersByMaterial(suppliers);
+      const categoryKey = selectedChart.toLowerCase();
+      if (groups[categoryKey]) {
+        suppliers = groups[categoryKey];
+      } else {
+        // Try to find by matching chart title
+        const allCategories = Object.keys(groups);
+        const matchingCategory = allCategories.find(cat => 
+          categoryToTitle(cat).toLowerCase() === selectedChart.toLowerCase()
+        );
+        if (matchingCategory) {
+          suppliers = groups[matchingCategory];
+        }
+      }
+    }
+    
+    if (suppliers.length === 0) {
+      recommendationContent.innerHTML = '<p>No suppliers available for the selected chart.</p>';
+      recommendationResults.style.display = 'block';
+      return;
+    }
+    
+    // Get recommendations
+    const recommendedSuppliers = getRecommendedSuppliers(suppliers, weights);
+    const recommendation = generateRecommendationSummary(recommendedSuppliers, weights);
+    
+    // Display results
+    displayRecommendation(recommendedSuppliers, recommendation);
+    
+  } catch (error) {
+    console.error('Error getting recommendation:', error);
+    recommendationContent.innerHTML = '<p>Error calculating recommendation. Please try again.</p>';
+    recommendationResults.style.display = 'block';
+  }
+};
+
+// Display recommendation results
+function displayRecommendation(recommendedSuppliers, recommendation) {
+  let html = '';
+  
+  // Summary as paragraph
+  html += `<p class="recommendation-summary">${recommendation.summary}</p>`;
+  
+  // Priority order list
+  html += '<ol class="recommendation-list">';
+  recommendedSuppliers.forEach((item, index) => {
+    html += `<li><span class="supplier-name">${item.supplier}</span> <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
+  });
+  html += '</ol>';
+  
+  // Caveats as paragraph
+  if (recommendation.caveats && recommendation.caveats.length > 0) {
+    html += '<p class="recommendation-caveat">';
+    html += '<strong>Note:</strong> ';
+    html += recommendation.caveats.join(' ');
+    html += '</p>';
+  }
+  
+  recommendationContent.innerHTML = html;
+  recommendationResults.style.display = 'block';
+}
 
 function loadSuppliers() {
   suppliersList.innerHTML = '<div class="suppliers-loading">Loading suppliers...</div>';

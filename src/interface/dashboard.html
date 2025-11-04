@@ -50,8 +50,11 @@
     <div class="buttons-section">
       <button class="btn" id="addSupplierBtn">ADD SUPPLIER</button>
       <button class="btn" id="viewSuppliersBtn">VIEW SUPPLIERS</button>
-      <button class="btn" id="ecobalyseBtn">ECOBALYSE</button>
-      <button class="btn" id="howToReadBtn">CHART EXPLAINER</button>
+      <button class="btn" id="weightedComparisonBtn">WEIGHTED COMPARISON</button>
+    </div>
+    <div class="info-buttons-section">
+      <button class="btn btn-info" id="ecobalyseBtn">ECOBALYSE</button>
+      <button class="btn btn-info" id="howToReadBtn">CHART EXPLAINER</button>
     </div>
 
     <div class="suppliers-section" id="suppliersSection">
@@ -193,9 +196,71 @@
     </div>
   </div>
 
+  <!-- Weighted Comparison Panel -->
+  <div class="weighted-comparison-panel" id="weightedComparisonPanel" style="display: none;">
+    <div class="weighted-panel-header">
+      <h3>WEIGHTED COMPARISON</h3>
+      <button class="close-panel-btn" id="closeWeightedPanel">&times;</button>
+    </div>
+    <div class="weighted-panel-content">
+      <div class="chart-selector">
+        <label>Apply to:</label>
+        <select id="chartSelector">
+          <option value="all">All Charts</option>
+        </select>
+      </div>
+      
+      <div class="weight-sliders">
+        <div class="weight-slider-item">
+          <label>
+            <span>Ecobalyse</span>
+            <span class="weight-value" id="ecobalyseWeightValue">20</span>%
+          </label>
+          <input type="range" id="ecobalyseWeight" min="0" max="100" value="20" class="weight-slider">
+        </div>
+        <div class="weight-slider-item">
+          <label>
+            <span>Transparency</span>
+            <span class="weight-value" id="transparencyWeightValue">20</span>%
+          </label>
+          <input type="range" id="transparencyWeight" min="0" max="100" value="20" class="weight-slider">
+        </div>
+        <div class="weight-slider-item">
+          <label>
+            <span>Price</span>
+            <span class="weight-value" id="priceWeightValue">20</span>%
+          </label>
+          <input type="range" id="priceWeight" min="0" max="100" value="20" class="weight-slider">
+        </div>
+        <div class="weight-slider-item">
+          <label>
+            <span>Lead Time</span>
+            <span class="weight-value" id="leadTimeWeightValue">20</span>%
+          </label>
+          <input type="range" id="leadTimeWeight" min="0" max="100" value="20" class="weight-slider">
+        </div>
+        <div class="weight-slider-item">
+          <label>
+            <span>MOQ</span>
+            <span class="weight-value" id="moqWeightValue">20</span>%
+          </label>
+          <input type="range" id="moqWeight" min="0" max="100" value="20" class="weight-slider">
+        </div>
+      </div>
+      
+      <button class="btn btn-recommend" id="getRecommendationBtn">GET RECOMMENDATION</button>
+      
+      <div class="recommendation-results" id="recommendationResults" style="display: none;">
+        <h4>RECOMMENDATION</h4>
+        <div id="recommendationContent"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/js/form-utils.js"></script>
   <script src="/static/js/radar-scoring.js"></script>
   <script src="/static/js/radar-charts.js"></script>
+  <script src="/static/js/weighted-scoring.js"></script>
   <script src="/static/js/dashboard.js"></script>
   <script>
     // Load radar charts on page load

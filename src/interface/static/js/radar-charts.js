@@ -446,6 +446,11 @@ async function loadAndRenderRadarCharts() {
       }
     });
     
+    // Update chart selector in weighted comparison panel if it exists
+    if (typeof updateChartSelector === 'function') {
+      updateChartSelector();
+    }
+    
   } catch (error) {
     console.error('Error loading radar charts:', error);
   }
