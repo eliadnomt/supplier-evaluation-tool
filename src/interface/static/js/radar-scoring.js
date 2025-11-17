@@ -3,23 +3,29 @@
  * 
  * This module implements the radar chart scoring behavior for supplier comparison.
  * 
- * Radar Chart Axes (1-9 scale):
- * 1. Ecobalyse impact - Normalized relative to suppliers (lower is better)
- * 2. Transparency - Based on traceable production steps (1-9, not relative)
- * 3. Price - Normalized relative to suppliers (lower is better)
- * 4. Lead Time - Normalized relative to suppliers (lower is better)
- * 5. Minimum Order Quantity - Normalized relative to suppliers (lower is better)
+ * Radar Chart Axes (0-10 scale):
+ * 1. Ecobalyse impact - Percentage difference from best (lower is better, 5 = best/0%)
+ * 2. Traceability - Based on traceable production steps (1-9, absolute, not relative)
+ * 3. Price - Percentage difference from best (lower is better, 5 = best/0%)
+ * 4. Lead Time - Percentage difference from best (lower is better, 5 = best/0%)
+ * 5. Minimum Order Quantity - Percentage difference from best (lower is better, 5 = best/0%)
  * 
- * Normalization Rules:
- * - For Ecobalyse, Price, Lead Time, MOQ: Values are normalized using min/max among current suppliers
- * - Lower values are considered better
- * - Scores range from 1 (worst) to 9 (best)
- * - If all suppliers have the same value (or only one supplier), score defaults to 5
+ * Percentage Difference Calculation (for Ecobalyse, Price, Lead Time, MOQ):
+ * - Best value (minimum) = 0% difference = score 5 (center)
+ * - Other values = positive % difference = lower score (toward 0)
+ * - Uses square root scale to show spread for high percentages (e.g., 300% MOQ)
+ * - Maps 0-300% range to 5-0 score range: score = 5 * (1 - sqrt(diffPercent / 300))
+ * - This compresses high percentages while maintaining visual differences
+ * - Tooltip shows context-specific wording:
+ *   - Ecobalyse: "X% worse" or "best"
+ *   - Price: "X% more expensive" or "best"
+ *   - Lead Time: "X% longer" or "best"
+ *   - MOQ: "X% higher" or "best"
  * 
- * Transparency Calculation:
+ * Traceability Calculation (absolute, not relative):
  * - Counts traceable production steps: fibre, spinning, weaving/knitting, dyeing/finishing, making
  * - Score = (known steps / 5 total steps) × 10, then scaled to 1-9 range
- * - Not scaled relative to other suppliers
+ * - Tooltip shows: "X/5 steps traceable"
  * 
  * Single Supplier Behavior:
  * - If only one supplier, all axes score 5 to avoid misleading "ideal" shape
@@ -30,7 +36,7 @@
  */
 
 /**
- * Calculate transparency score based on traceable production steps
+ * Calculate traceability score based on traceable production steps
  * Steps: fibre (material_origin), spinning, weaving/knitting, dyeing/finishing, making
  * Score = (known steps / total steps) × 10
  */
@@ -82,29 +88,89 @@ function calculateTransparencyScore(supplier) {
 }
 
 /**
- * Normalize a value to 1-9 scale where lower values are better
- * Formula: score = 1 + 8 * (1 - (value - min) / (max - min))
- * - When value = min (lowest): score = 9 (best)
- * - When value = max (highest): score = 1 (worst)
- * - When all values are the same or only one supplier, return 5 (neutral)
+ * Calculate percentage difference from best value (for axes where lower is better)
+ * Returns an object with:
+ * - score: value on 0-10 scale where 5 = best (0% difference)
+ * - diffPercent: actual percentage difference for tooltip display
+ * 
+ * Uses square root scale to show spread for high percentages (e.g., 300% MOQ)
+ * Maps 0-300% range to 5-0 score range using square root compression
+ * Formula: score = 5 * (1 - sqrt(diffPercent / 300)), clamped to 0-10
+ * 
+ * This compresses high percentages while still showing relative differences:
+ * - 0% = 5.0 (best, at center)
+ * - 25% ≈ 2.7
+ * - 50% ≈ 1.9
+ * - 100% ≈ 0.9
+ * - 200% ≈ 0.3
+ * - 300% = 0.0 (worst, at edge)
  */
-function normalizeLowerIsBetter(value, min, max) {
-  // Handle edge cases
-  if (min === undefined || max === undefined || min === max) {
-    return 5; // Neutral score when no variation
+function calculatePercentageDiffFromBest(value, bestValue) {
+  if (bestValue === undefined || bestValue === null || bestValue === 0) {
+    return { score: 5, diffPercent: 0 };
   }
   
-  // Normalize value to 0-1 range (0 = min, 1 = max)
-  const normalized = (value - min) / (max - min);
+  // Calculate percentage difference from best (lower is better, so best = minimum)
+  const diffPercent = ((value - bestValue) / bestValue) * 100;
   
-  // Invert so that lower values get higher scores
-  // normalized = 0 (min) -> score = 9 (best)
-  // normalized = 1 (max) -> score = 1 (worst)
-  // Scale to 1-9 range instead of 0-10
-  const score = 1 + 8 * (1 - normalized);
+  // Use square root scale to compress high percentages while showing spread
+  // Map 0-300% range to 5-0 score range
+  // This allows values up to 300% to still show visual differences
+  const maxPercent = 300; // Maximum percentage to map (300% = score 0)
+  let score = 5 * (1 - Math.sqrt(Math.max(0, diffPercent) / maxPercent));
+  score = Math.max(0, Math.min(10, score));
   
-  // Clamp to 1-9 range (shouldn't be needed, but safety check)
-  return Math.max(1, Math.min(9, score));
+  return {
+    score: Math.round(score * 100) / 100,
+    diffPercent: Math.round(diffPercent * 100) / 100
+  };
+}
+
+/**
+ * Calculate price score as percentage deviation from median
+ * Returns an object with:
+ * - score: value on 0-10 scale where 5 = median (0% deviation)
+ * - deviationPercent: actual percentage deviation for tooltip display
+ * 
+ * Mapping: -50% deviation = 0, 0% = 5, +50% = 10
+ * Formula: score = 5 + (deviationPercent / 50) * 5
+ */
+function calculatePriceDeviationScore(price, median) {
+  if (median === undefined || median === null || median === 0) {
+    return { score: 5, deviationPercent: 0 };
+  }
+  
+  // Calculate percentage deviation
+  const deviationPercent = ((price - median) / median) * 100;
+  
+  // Map to 0-10 scale where 5 = 0% deviation
+  // Range: -50% to +50% maps to 0-10
+  // score = 5 + (deviationPercent / 50) * 5
+  let score = 5 + (deviationPercent / 50) * 5;
+  
+  // Clamp to 0-10 range
+  score = Math.max(0, Math.min(10, score));
+  
+  return {
+    score: Math.round(score * 100) / 100,
+    deviationPercent: Math.round(deviationPercent * 100) / 100
+  };
+}
+
+/**
+ * Calculate median of an array of numbers
+ */
+function calculateMedian(values) {
+  if (!values || values.length === 0) return undefined;
+  
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  } else {
+    return sorted[mid];
+  }
 }
 
 /**
@@ -116,19 +182,27 @@ function calculateRadarScores(suppliers) {
     return [];
   }
   
-  // Single supplier case: all axes score 5 (neutral, within 1-9 range)
+  // Single supplier case: all axes score 5 (neutral, best value)
   if (suppliers.length === 1) {
-    // For transparency, still calculate normally but scale to 1-9
-    const transparencyRaw = calculateTransparencyScore(suppliers[0]);
-    const transparencyScaled = 1 + (transparencyRaw / 10) * 8; // Scale 0-10 to 1-9
+    // For traceability, still calculate normally but scale to 1-9
+    const traceabilityRaw = calculateTransparencyScore(suppliers[0]);
+    const traceabilityScaled = 1 + (traceabilityRaw / 10) * 8; // Scale 0-10 to 1-9
+    const traceabilitySteps = Math.round((traceabilityRaw / 10) * 5);
     
+    // For all relative axes, single supplier is the best = 0% difference = score 5
     return [{
       supplier: suppliers[0].supplier || 'Unknown',
+      fabricName: suppliers[0].fabricName || '',
       ecobalyse: 5,
-      transparency: transparencyScaled,
+      ecobalyseDiffPercent: 0,
+      traceability: traceabilityScaled,
+      traceabilitySteps: traceabilitySteps,
       price: 5,
+      priceDiffPercent: 0,
       leadTime: 5,
-      moq: 5
+      leadTimeDiffPercent: 0,
+      moq: 5,
+      moqDiffPercent: 0
     }];
   }
   
@@ -146,48 +220,55 @@ function calculateRadarScores(suppliers) {
     .map(s => s.moq_m)
     .filter(v => v != null && !isNaN(v) && v !== undefined);
   
-  // Calculate min/max for normalization
-  const ecobalyseMin = ecobalyseValues.length > 0 ? Math.min(...ecobalyseValues) : undefined;
-  const ecobalyseMax = ecobalyseValues.length > 0 ? Math.max(...ecobalyseValues) : undefined;
-  const priceMin = priceValues.length > 0 ? Math.min(...priceValues) : undefined;
-  const priceMax = priceValues.length > 0 ? Math.max(...priceValues) : undefined;
-  const leadTimeMin = leadTimeValues.length > 0 ? Math.min(...leadTimeValues) : undefined;
-  const leadTimeMax = leadTimeValues.length > 0 ? Math.max(...leadTimeValues) : undefined;
-  const moqMin = moqValues.length > 0 ? Math.min(...moqValues) : undefined;
-  const moqMax = moqValues.length > 0 ? Math.max(...moqValues) : undefined;
+  // Calculate best values (minimum for all relative axes - lower is better)
+  const ecobalyseBest = ecobalyseValues.length > 0 ? Math.min(...ecobalyseValues) : undefined;
+  const priceBest = priceValues.length > 0 ? Math.min(...priceValues) : undefined;
+  const leadTimeBest = leadTimeValues.length > 0 ? Math.min(...leadTimeValues) : undefined;
+  const moqBest = moqValues.length > 0 ? Math.min(...moqValues) : undefined;
   
   // Calculate scores for each supplier
   return suppliers.map(supplier => {
-    // Ecobalyse: Higher raw score = worse environmental impact = lower normalized score (closer to 0)
-    // Lower raw score = better environmental impact = higher normalized score (closer to 10)
-    const ecobalyse = supplier.ecobalyse_score != null && !isNaN(supplier.ecobalyse_score)
-      ? normalizeLowerIsBetter(supplier.ecobalyse_score, ecobalyseMin, ecobalyseMax)
-      : 5;
+    // Ecobalyse: Percentage difference from best (lower is better)
+    const ecobalyseData = supplier.ecobalyse_score != null && !isNaN(supplier.ecobalyse_score) && ecobalyseBest
+      ? calculatePercentageDiffFromBest(supplier.ecobalyse_score, ecobalyseBest)
+      : { score: 5, diffPercent: 0 };
     
-    const price = supplier.price_eur_per_m != null && !isNaN(supplier.price_eur_per_m)
-      ? normalizeLowerIsBetter(supplier.price_eur_per_m, priceMin, priceMax)
-      : 5;
+    // Price: Percentage difference from best (lower is better)
+    const priceData = supplier.price_eur_per_m != null && !isNaN(supplier.price_eur_per_m) && priceBest
+      ? calculatePercentageDiffFromBest(supplier.price_eur_per_m, priceBest)
+      : { score: 5, diffPercent: 0 };
     
-    const leadTime = supplier.lead_time_weeks != null && !isNaN(supplier.lead_time_weeks)
-      ? normalizeLowerIsBetter(supplier.lead_time_weeks, leadTimeMin, leadTimeMax)
-      : 5;
+    // Lead Time: Percentage difference from best (lower is better)
+    const leadTimeData = supplier.lead_time_weeks != null && !isNaN(supplier.lead_time_weeks) && leadTimeBest
+      ? calculatePercentageDiffFromBest(supplier.lead_time_weeks, leadTimeBest)
+      : { score: 5, diffPercent: 0 };
     
-    const moq = supplier.moq_m != null && !isNaN(supplier.moq_m)
-      ? normalizeLowerIsBetter(supplier.moq_m, moqMin, moqMax)
-      : 5;
+    // MOQ: Percentage difference from best (lower is better)
+    const moqData = supplier.moq_m != null && !isNaN(supplier.moq_m) && moqBest
+      ? calculatePercentageDiffFromBest(supplier.moq_m, moqBest)
+      : { score: 5, diffPercent: 0 };
     
-    // Transparency is calculated independently (not normalized relative to other suppliers)
+    // Traceability is calculated independently (absolute score, not relative)
     // Scale from 0-10 to 1-9 range
-    const transparencyRaw = calculateTransparencyScore(supplier);
-    const transparency = 1 + (transparencyRaw / 10) * 8; // Scale 0-10 to 1-9
+    const traceabilityRaw = calculateTransparencyScore(supplier);
+    const traceability = 1 + (traceabilityRaw / 10) * 8; // Scale 0-10 to 1-9
+    // Calculate actual steps (0-5) from raw score (0-10)
+    // traceabilityRaw = (knownSteps / 5) * 10, so knownSteps = (traceabilityRaw / 10) * 5
+    const traceabilitySteps = Math.round((traceabilityRaw / 10) * 5);
     
     return {
       supplier: supplier.supplier || 'Unknown',
-      ecobalyse: Math.round(ecobalyse * 100) / 100, // Round to 2 decimals
-      transparency: Math.round(transparency * 100) / 100,
-      price: Math.round(price * 100) / 100,
-      leadTime: Math.round(leadTime * 100) / 100,
-      moq: Math.round(moq * 100) / 100,
+      fabricName: supplier.fabricName || '',
+      ecobalyse: ecobalyseData.score,
+      ecobalyseDiffPercent: ecobalyseData.diffPercent,
+      traceability: Math.round(traceability * 100) / 100,
+      traceabilitySteps: traceabilitySteps, // Store raw steps (0-5) for tooltip
+      price: priceData.score,
+      priceDiffPercent: priceData.diffPercent,
+      leadTime: leadTimeData.score,
+      leadTimeDiffPercent: leadTimeData.diffPercent,
+      moq: moqData.score,
+      moqDiffPercent: moqData.diffPercent,
       // Include certifications for display (not in scoring)
       certifications: supplier.certifications || []
     };
@@ -255,19 +336,73 @@ function getSupplierColor(supplierName) {
 function getRadarChartData(suppliers) {
   const scores = calculateRadarScores(suppliers);
   
+  // Track suppliers that appear multiple times to differentiate them
+  const supplierCounts = {};
+  scores.forEach(score => {
+    supplierCounts[score.supplier] = (supplierCounts[score.supplier] || 0) + 1;
+  });
+  
+  // Track which instance of each supplier we're on
+  const supplierInstances = {};
+  
   return {
-    labels: ['Ecobalyse', 'Transparency', 'Price', 'Lead Time', 'MOQ'],
-    datasets: scores.map((score) => {
-      const colors = getSupplierColor(score.supplier);
+    labels: ['Ecobalyse', 'Traceability', 'Price', 'Lead Time', 'MOQ'],
+    datasets: scores.map((score, index) => {
+      // Use supplier name for color mapping (ensures consistent colors across charts)
+      const baseColors = getSupplierColor(score.supplier);
+      
+      // If this supplier appears multiple times, differentiate with line style or shade
+      const isMultiple = supplierCounts[score.supplier] > 1;
+      const instanceIndex = supplierInstances[score.supplier] || 0;
+      supplierInstances[score.supplier] = instanceIndex + 1;
+      
+      // Remove fill/shading - only show outline
+      const colors = {
+        backgroundColor: 'transparent', // No fill
+        borderColor: baseColors.borderColor,
+        pointBackgroundColor: baseColors.pointBackgroundColor,
+        pointBorderColor: baseColors.pointBorderColor,
+        pointHoverBackgroundColor: baseColors.pointHoverBackgroundColor,
+        pointHoverBorderColor: baseColors.pointHoverBorderColor,
+        borderWidth: 2
+      };
+      
+      // Differentiate multiple fabrics from same supplier
+      if (isMultiple) {
+        if (instanceIndex === 0) {
+          // First instance: solid line
+          colors.borderDash = [];
+        } else if (instanceIndex === 1) {
+          // Second instance: dashed line
+          colors.borderDash = [5, 5];
+        } else {
+          // Third+ instance: dotted line
+          colors.borderDash = [2, 2];
+        }
+      }
+      
+      // Format legend label as "Supplier Name (Fabric Name)"
+      const legendLabel = score.fabricName 
+        ? `${score.supplier} (${score.fabricName})`
+        : score.supplier;
+      
       return {
-        label: score.supplier,
+        label: legendLabel,
+        supplierName: score.supplier, // Keep original for color mapping
+        fabricName: score.fabricName,
         data: [
           score.ecobalyse,
-          score.transparency,
+          score.traceability,
           score.price,
           score.leadTime,
           score.moq
         ],
+        // Store percentage differences and traceability steps for tooltips
+        ecobalyseDiffPercent: score.ecobalyseDiffPercent,
+        traceabilitySteps: score.traceabilitySteps,
+        priceDiffPercent: score.priceDiffPercent,
+        leadTimeDiffPercent: score.leadTimeDiffPercent,
+        moqDiffPercent: score.moqDiffPercent,
         ...colors
       };
     })

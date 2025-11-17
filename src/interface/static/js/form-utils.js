@@ -103,7 +103,7 @@ function createMaterialRow(rowData) {
   shareInput.max = 100;
   shareInput.step = 1;
   shareInput.value = share !== null ? (share * 100) : '';
-  shareInput.placeholder = 'share (%)';
+  shareInput.placeholder = 'Share (%)';
   row.appendChild(shareInput);
 
   const countrySel = document.createElement('select');

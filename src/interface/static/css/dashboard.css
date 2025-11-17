@@ -292,10 +292,11 @@ body.weighted-panel-open .container {
 .dashboard-page .material-row select,
 .dashboard-page .material-row input {
   width: 100%;
+  height: 20px;
 }
 
 .dashboard-page .remove-btn {
-  padding: 8px 16px;
+  padding: 3px 16px;
   background: #fee;
   color: #a00;
   border: 1px solid #a00;

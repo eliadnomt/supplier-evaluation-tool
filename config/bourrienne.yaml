@@ -23,3 +23,27 @@ products:
     trims: []  # No buttons for sweaters
     upcycled: false
     airTransportRatio: 0.0
+
+  robe:  # Dress
+    default_mass: 0.3  # kg
+    trims:
+      - name: "bouton plastique"  # Will be resolved to UUID from API, or use id: "uuid-here" directly
+        quantity: 20
+    upcycled: false
+    airTransportRatio: 0.0
+
+  veste:  # Jacket
+    default_mass: 0.4  # kg
+    trims:
+      - name: "bouton plastique"  # Will be resolved to UUID from API, or use id: "uuid-here" directly
+        quantity: 10
+    upcycled: false
+    airTransportRatio: 0.0
+
+  jupe:  # Skirt
+    default_mass: 0.2  # kg
+    trims:
+      - name: "bouton plastique"  # Will be resolved to UUID from API, or use id: "uuid-here" directly
+        quantity: 2
+    upcycled: false
+    airTransportRatio: 0.0

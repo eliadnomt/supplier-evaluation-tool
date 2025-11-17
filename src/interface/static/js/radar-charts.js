@@ -258,46 +258,23 @@ function createRadarChart(canvasId, suppliers) {
   
   if (!canvas) return;
   
-  // Determine desired chart size based on container, not the other way around
+  // Fixed chart size: 500x500px
+  const fixedChartSize = 500;
   const wrapper = canvas.closest('.chart-wrapper');
-  const chartContainer = canvas.closest('.chart-container');
   
-  // Get available container width
-  const containerWidth = chartContainer && chartContainer.offsetWidth > 0 ? chartContainer.offsetWidth : 350;
-  
-  // Calculate desired chart area size (what we want the hexagon to be)
-  // Account for layout padding and label space
-  const leftOffset = 40; // layout.padding.left
-  const labelFontSize = 10;
-  const labelPadding = 5; // pointLabels.padding
-  // Estimate label width: longest label "Transparency" is ~11 chars * 6px/char + padding = ~70px
-  const estimatedLabelWidth = labelFontSize * 7 + labelPadding;
-  
-  // Available width for chart area = container width - left offset - right label space
-  const availableWidth = containerWidth - leftOffset - estimatedLabelWidth;
-  // Available height should match (square chart)
-  const availableHeight = containerWidth - (estimatedLabelWidth * 2); // Labels on top and bottom
-  
-  // Chart area size is the smaller of width/height to ensure square
-  const chartAreaSize = Math.min(availableWidth, availableHeight, 280);
-  
-  // Canvas size needs to accommodate the chart area plus labels on all sides
-  // But Chart.js will center the chart, so we need enough space
-  const canvasSize = chartAreaSize + (estimatedLabelWidth * 2); // Labels on all sides
-  
-  // Set canvas dimensions
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvasSize * dpr;
-  canvas.height = canvasSize * dpr;
-  canvas.style.width = canvasSize + 'px';
-  canvas.style.height = canvasSize + 'px';
+  // Set canvas dimensions to fixed size
+  // Note: Don't multiply by devicePixelRatio for Chart.js - it handles this internally
+  canvas.width = fixedChartSize;
+  canvas.height = fixedChartSize;
+  canvas.style.width = fixedChartSize + 'px';
+  canvas.style.height = fixedChartSize + 'px';
   canvas.style.display = 'block';
   canvas.style.margin = '0 auto';
   
   // Set wrapper to match canvas size exactly
   if (wrapper) {
-    wrapper.style.height = canvasSize + 'px';
-    wrapper.style.width = '100%';
+    wrapper.style.height = fixedChartSize + 'px';
+    wrapper.style.width = fixedChartSize + 'px';
   }
   
   radarCharts[canvasId] = new Chart(canvas, {
@@ -324,10 +301,11 @@ function createRadarChart(canvasId, suppliers) {
           },
           pointLabels: {
             font: {
-              size: 10,
-              weight: 300
+              size: 14,
+              weight: 300,
+              family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
             },
-            padding: 5 // No padding - labels should be as close as possible
+            padding: 8
           },
           grid: {
             color: '#e0e0e0'
@@ -344,7 +322,59 @@ function createRadarChart(canvasId, suppliers) {
         tooltip: {
           callbacks: {
             label: function(context) {
-              return context.dataset.label + ': ' + context.parsed.r.toFixed(2);
+              const label = context.dataset.label || '';
+              const axisIndex = context.dataIndex;
+              // Get axis label from chart data
+              const axisLabel = context.chart.data.labels[axisIndex];
+              
+              // Ecobalyse: percentage difference from best
+              if (axisLabel === 'Ecobalyse' && context.dataset.ecobalyseDiffPercent !== undefined) {
+                const diff = context.dataset.ecobalyseDiffPercent;
+                if (diff === 0) {
+                  return `${label}: best`;
+                } else {
+                  return `${label}: ${diff.toFixed(1)}% worse`;
+                }
+              }
+              
+              // Traceability: absolute steps
+              if (axisLabel === 'Traceability' && context.dataset.traceabilitySteps !== undefined) {
+                const steps = context.dataset.traceabilitySteps;
+                return `${label}: ${steps}/5 steps traceable`;
+              }
+              
+              // Price: percentage difference from best
+              if (axisLabel === 'Price' && context.dataset.priceDiffPercent !== undefined) {
+                const diff = context.dataset.priceDiffPercent;
+                if (diff === 0) {
+                  return `${label}: best`;
+                } else {
+                  return `${label}: ${diff.toFixed(1)}% more expensive`;
+                }
+              }
+              
+              // Lead Time: percentage difference from best
+              if (axisLabel === 'Lead Time' && context.dataset.leadTimeDiffPercent !== undefined) {
+                const diff = context.dataset.leadTimeDiffPercent;
+                if (diff === 0) {
+                  return `${label}: best`;
+                } else {
+                  return `${label}: ${diff.toFixed(1)}% longer`;
+                }
+              }
+              
+              // MOQ: percentage difference from best
+              if (axisLabel === 'MOQ' && context.dataset.moqDiffPercent !== undefined) {
+                const diff = context.dataset.moqDiffPercent;
+                if (diff === 0) {
+                  return `${label}: best`;
+                } else {
+                  return `${label}: ${diff.toFixed(1)}% higher`;
+                }
+              }
+              
+              // Fallback: show the score value
+              return `${label}: ${context.parsed.r.toFixed(2)}`;
             }
           }
         }

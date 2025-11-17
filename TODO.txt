@@ -1,29 +1,4 @@
 Make the whole tool in french
-Remove the explainer on the dashboard (makes it cheap)
-
-
-When adding a supplier:
-Sections should be separated between supplier and product information, 
-and Bourrienne use case
-Make the composition share height the same as the other fields in the row
-
-SUPPLIER SECTION
-Composition detail (currently material origin)
-- set default option to be coton, but leave other options available
-- remove the spinning information (have it set in Bourrienne params)
-Fabric production specifications
-- tricotage/tissage, make weaving the default
-
-
-BOURRIENNE CONFIG
-Have a config called Bourrienne-params, with Ecobalyse parameters 
-specific only to Bourrienne:
-Business size - always small-Business
-Garment type - either chemise or pull (also jupe, they had one capsule
-and robe, it's a chemise-robe, and veste (man capsule had one))
-Spinning type - always conventional spinning if natural material,
-otherwise synthetic spinning
-Dyeing process - always average
 
 Radar charts:
 - deviation from median supplier price, not on a normalised scale. that way it's less cluttered and the shapes won't overlap on each axis.

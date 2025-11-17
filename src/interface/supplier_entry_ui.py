@@ -31,7 +31,7 @@ def _determine_spinning_type(material_id):
     if not material_id:
         return natural_spin
     mat = str(material_id).lower()
-    synthetic_keywords = ['polyester', 'polyamide', 'nylon', 'acry', 'viscose', 'modal', 'cupro', 'lyocell', 'synthetic']
+    synthetic_keywords = ['ei-acrylique', 'ei-pa', 'ei-pet', 'ei-pet-r', 'ei-pp', 'elasthane']
     if any(keyword in mat for keyword in synthetic_keywords):
         return synthetic_spin
     return natural_spin
