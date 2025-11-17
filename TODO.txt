@@ -1,7 +1,26 @@
 Make the whole tool in french
 
-Radar charts:
-- deviation from median supplier price, not on a normalised scale. that way it's less cluttered and the shapes won't overlap on each axis.
-- legend should be supplier name and fabric type
-- change axis label to traceability not transparency
-- chart size needs to be fixed not relative, too small axis labels
+dashboard
+- make description sit underneath titles
+- get rid of chart button and have an info tool tip in the chart canvas that explains each chart individually
+- make the ecobalyse logo the button to access ecobalyse information, and have a label below it saying 'click for more info'
+- make the charts have higher resolution
+
+add supplier
+- limit the garment type select menu to those in the bourrienne config
+
+weighted comparison
+- all the percentages need to add up to 100, so they should all start at zero, and have a checker when the sum total exceeds 100
+- when apply to all charts is selected, the recommendation should be done per chart (makes no sense to have a recommendation for a supplier
+for a single material, with different material options available)
+
+ecobalyse
+- update first explainer to have the link to the official ecobalyse simulator. 
+- assumed constant fields update to 'assumed parameters'
+- have a card: Bourrienne specifications
+    - business size: small-business
+    - spinning type: conventional spinning (with explainer) for natural materials
+    - dyeing type: always average (explain what it means)
+- do garment type cards (similar to the fabric cards in the supplier list) using an emoji for each type
+- remove the variable fields table, include a statement that all other fields are dynamically set through the 'add supplier' modal
+- get rid of how scores are calculated, score is no longer normalised, just shows percentage difference on actual score comparison.
