@@ -1,0 +1,25 @@
+business_size: small-business
+garment_types:
+  - chemise
+  - pull
+  - jupe
+  - robe
+  - veste
+spinning_type:
+  natural: ConventionalSpinning
+  synthetic: SyntheticSpinning
+dyeing_process: average
+products:
+  chemise:  # Shirt
+    default_mass: 0.1  # kg
+    trims:
+      - name: "bouton plastique"  # Will be resolved to UUID from API, or use id: "uuid-here" directly
+        quantity: 10
+    upcycled: false
+    airTransportRatio: 0.0  # Default to 0 (no air transport)
+    
+  pull:  # Sweater
+    default_mass: 0.2  # kg
+    trims: []  # No buttons for sweaters
+    upcycled: false
+    airTransportRatio: 0.0

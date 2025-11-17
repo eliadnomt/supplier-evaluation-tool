@@ -1,1 +1,24 @@
-[]
+- supplier: BORGHI
+  fabricName: Art CR EPOQUE GOTS
+  product: chemise
+  price_eur_per_m: 29.07
+  lead_time_weeks: 4.0
+  fabric_lead_time_weeks: 6.0
+  moq_m: 120.0
+  material_origin:
+  - id: ei-coton-organic
+    share: 1.0
+    spinning: ConventionalSpinning
+    country: REO
+  countrySpinning: Région - Europe de l'Ouest
+  countryFabric: Région - Europe de l'Ouest
+  countryDyeing: Région - Europe de l'Ouest
+  countryMaking: Région - Europe de l'Ouest
+  fabricProcess: weaving
+  dyeingProcess: average
+  makingComplexity: very-high
+  businessSize: small-business
+  numberOfReferences: 100
+  price: 395.0
+  weight_gm2: 129.0
+  gross_width: 150.0

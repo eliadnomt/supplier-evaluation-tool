@@ -16,6 +16,25 @@ BASE_API_URL = os.environ.get('ECOBALYSE_API_URL', 'https://ecobalyse.beta.gouv.
 # Paths
 THIS_DIR = os.path.dirname(__file__)
 CONFIG_ROOT = os.path.join(os.path.dirname(os.path.dirname(THIS_DIR)), 'config')
+BOURRIENNE_CONFIG_PATH = os.path.join(CONFIG_ROOT, 'bourrienne.yaml')
+
+def _load_bourrienne_defaults():
+    cfg = load_yaml(BOURRIENNE_CONFIG_PATH) if os.path.exists(BOURRIENNE_CONFIG_PATH) else {}
+    return cfg or {}
+
+BOURRIENNE_DEFAULTS = _load_bourrienne_defaults()
+
+def _determine_spinning_type(material_id):
+    spinning_cfg = BOURRIENNE_DEFAULTS.get('spinning_type', {})
+    natural_spin = spinning_cfg.get('natural')
+    synthetic_spin = spinning_cfg.get('synthetic', natural_spin)
+    if not material_id:
+        return natural_spin
+    mat = str(material_id).lower()
+    synthetic_keywords = ['polyester', 'polyamide', 'nylon', 'acry', 'viscose', 'modal', 'cupro', 'lyocell', 'synthetic']
+    if any(keyword in mat for keyword in synthetic_keywords):
+        return synthetic_spin
+    return natural_spin
 
 # Simple in-memory cache for enums
 _ENUM_CACHE = {}
@@ -36,9 +55,11 @@ def _cache_set(key, data):
 
 PREFERRED_FIELD_ORDER = [
     'supplier',
+    'fabricName',
     'product',
     'price_eur_per_m',
     'lead_time_weeks',
+    'fabric_lead_time_weeks',
     'moq_m',
     'stock_service',
     'fibre_origin',
@@ -88,7 +109,7 @@ def _to_bool(value):
 
 def normalize_supplier(raw: dict) -> OrderedDict:
     s = dict(raw or {})
-    for k in ['price_eur_per_m', 'moq_m', 'weight_gm2', 'price', 'gross_width', 'lead_time_weeks']:
+    for k in ['price_eur_per_m', 'moq_m', 'weight_gm2', 'price', 'gross_width', 'lead_time_weeks', 'fabric_lead_time_weeks']:
         if k in s:
             s[k] = _to_float(s.get(k))
     if 'numberOfReferences' in s:
@@ -100,12 +121,28 @@ def normalize_supplier(raw: dict) -> OrderedDict:
         for item in s['material_origin']:
             if not isinstance(item, dict):
                 continue
+            share_val = item.get('share')
+            if share_val is not None:
+                try:
+                    share_val = float(share_val)
+                except Exception:
+                    share_val = None
+            if share_val and share_val > 1:
+                share_val = share_val / 100.0
+            default_spinning = _determine_spinning_type(item.get('id'))
             norm_list.append({
                 'id': item.get('id'),
-                'share': _to_float(item.get('share')),
-                'spinning': item.get('spinning')
+                'share': share_val,
+                'spinning': item.get('spinning') or default_spinning,
+                'country': item.get('country')
             })
         s['material_origin'] = norm_list
+
+    if BOURRIENNE_DEFAULTS:
+        if not s.get('businessSize'):
+            s['businessSize'] = BOURRIENNE_DEFAULTS.get('business_size', s.get('businessSize'))
+        if not s.get('dyeingProcess'):
+            s['dyeingProcess'] = BOURRIENNE_DEFAULTS.get('dyeing_process', s.get('dyeingProcess'))
     ordered_items = []
     for key in PREFERRED_FIELD_ORDER:
         if key in s:
@@ -149,10 +186,6 @@ def get_enum_response(enum):
 @app.route('/')
 def dashboard():
     return render_template('dashboard/index.html')
-
-@app.route('/add')
-def add_page():
-    return render_template('supplier_form/index.html')
 
 # --------- Static Files ---------
 @app.route('/static/<path:filename>')
@@ -268,8 +301,10 @@ def _row_to_supplier(row: dict) -> Supplier:
         certs = [c.strip() for c in certs.split(';') if c.strip()]
     return Supplier(
         supplier=row.get('supplier', ''),
+        fabricName=row.get('fabricName'),
         price_eur_per_m=float(row.get('price_eur_per_m', 0.0)),
         lead_time_weeks=float(row.get('lead_time_weeks', 0.0)),
+        fabric_lead_time_weeks=float(row.get('fabric_lead_time_weeks', 0.0)) if row.get('fabric_lead_time_weeks') is not None else None,
         moq_m=float(row.get('moq_m', 0.0)),
         stock_service=bool(row.get('stock_service', False)),
         fibre_origin=row.get('fibre_origin'),
@@ -342,8 +377,10 @@ def suppliers_for_radar():
             # Build supplier data with all fields needed for radar chart and supplier list
             supplier_data = {
                 'supplier': s.supplier,
+                'fabricName': s.fabricName,
                 'price_eur_per_m': s.price_eur_per_m,
                 'lead_time_weeks': s.lead_time_weeks,
+                'fabric_lead_time_weeks': s.fabric_lead_time_weeks,
                 'moq_m': s.moq_m,
                 'ecobalyse_score': ecobalyse_score,
                 'product': product_type,

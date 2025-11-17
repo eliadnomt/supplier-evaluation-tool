@@ -19,18 +19,36 @@ const chartSelector = document.getElementById('chartSelector');
 const getRecommendationBtn = document.getElementById('getRecommendationBtn');
 const recommendationResults = document.getElementById('recommendationResults');
 const recommendationContent = document.getElementById('recommendationContent');
+let isSupplierFormDirty = false;
+
+function resetSupplierFormState() {
+  isSupplierFormDirty = false;
+}
+
+function attemptCloseSupplierModal() {
+  if (isSupplierFormDirty) {
+    const confirmClose = confirm('You have unsaved supplier details. Close without saving?');
+    if (!confirmClose) {
+      return false;
+    }
+  }
+  modal.classList.remove('active');
+  resetSupplierFormState();
+  return true;
+}
 
 addBtn.onclick = () => {
   // Reset form and remove edit mode
   document.getElementById('supplierForm').reset();
   document.getElementById('supplierForm').dataset.editIndex = '';
   document.getElementById('materialsSection').innerHTML = '';
-  document.querySelector('.modal-content h2').textContent = 'Enter Supplier Information';
+  document.querySelector('.modal-content h2').textContent = 'Supplier information';
   document.getElementById('status').innerText = '';
+  resetSupplierFormState();
   // Reset material validation state
-  const addMaterialBtn = document.getElementById('addMaterialBtn');
-  if (addMaterialBtn) {
-    addMaterialBtn.disabled = false;
+  const addFibreBtn = document.getElementById('addFibreBtn');
+  if (addFibreBtn) {
+    addFibreBtn.disabled = false;
   }
   const matOriginWarn = document.getElementById('matOriginWarn');
   if (matOriginWarn) {
@@ -42,12 +60,12 @@ addBtn.onclick = () => {
 };
 
 closeBtn.onclick = () => {
-  modal.classList.remove('active');
+  attemptCloseSupplierModal();
 };
 
 modal.onclick = (e) => {
   if (e.target === modal) {
-    modal.classList.remove('active');
+    attemptCloseSupplierModal();
   }
 };
 
@@ -324,13 +342,12 @@ function renderSuppliers(suppliers) {
     
     // Other fields
     const otherFields = [
-      { label: 'Price €/m', value: supplier.price_eur_per_m },
+      { label: 'Fabric Name', value: supplier.fabricName },
       { label: 'MOQ (m)', value: supplier.moq_m },
-      { label: 'Lead Time (weeks)', value: supplier.lead_time_weeks },
+      { label: 'Price €/m', value: supplier.price_eur_per_m },
+      { label: 'Fabric Lead Time (weeks)', value: supplier.fabric_lead_time_weeks },
       { label: 'Weight (g/m²)', value: supplier.weight_gm2 },
-      { label: 'Gross Width (cm)', value: supplier.gross_width },
-      { label: 'Price per Article (€)', value: supplier.price },
-      { label: 'Number of Articles', value: supplier.numberOfReferences }
+      { label: 'Gross Width (cm)', value: supplier.gross_width }
     ];
     
     // Render highlight fields first (on their own row)
@@ -444,6 +461,7 @@ function editSupplier(index, supplier) {
   
   // Open modal
   modal.classList.add('active');
+  resetSupplierFormState();
   
   // Load enums first (this will clear all selects)
   loadEnums();
@@ -453,6 +471,9 @@ function editSupplier(index, supplier) {
     // Fill text inputs immediately (they don't get cleared)
     if (supplierValues.supplier) {
       document.querySelector('input[name="supplier"]').value = supplierValues.supplier;
+    }
+    if (supplierValues.fabricName) {
+      document.querySelector('input[name="fabricName"]').value = supplierValues.fabricName;
     }
     if (supplierValues.gross_width) {
       document.querySelector('input[name="gross_width"]').value = supplierValues.gross_width;
@@ -465,6 +486,9 @@ function editSupplier(index, supplier) {
     }
     if (supplierValues.moq_m) {
       document.querySelector('input[name="moq_m"]').value = supplierValues.moq_m;
+    }
+    if (supplierValues.fabric_lead_time_weeks) {
+      document.querySelector('input[name="fabric_lead_time_weeks"]').value = supplierValues.fabric_lead_time_weeks;
     }
     if (supplierValues.numberOfReferences) {
       document.querySelector('input[name="numberOfReferences"]').value = supplierValues.numberOfReferences;
@@ -479,13 +503,11 @@ function editSupplier(index, supplier) {
     // Fill select dropdowns - check if options are loaded first
     const selectIds = [
       { id: 'productSelect', value: supplierValues.product },
-      { id: 'businessSizeSelect', value: supplierValues.businessSize },
       { id: 'spinningCountrySelect', value: supplierValues.countrySpinning },
       { id: 'fabricCountrySelect', value: supplierValues.countryFabric },
       { id: 'dyeingCountrySelect', value: supplierValues.countryDyeing },
       { id: 'makingCountrySelect', value: supplierValues.countryMaking },
       { id: 'fabricProcessSelect', value: supplierValues.fabricProcess },
-      { id: 'dyeingProcessSelect', value: supplierValues.dyeingProcess },
       { id: 'makingComplexitySelect', value: supplierValues.makingComplexity }
     ];
     
@@ -531,8 +553,8 @@ function editSupplier(index, supplier) {
 }
 
 // Material row button handler
-document.getElementById('addMaterialBtn').onclick = () => {
-  if (materialsData.length === 0 || spinningData.length === 0) {
+document.getElementById('addFibreBtn').onclick = () => {
+  if (materialsData.length === 0) {
     fetchMaterialEnums(()=>{ createMaterialRow(); updateMatSharesSum(); });
   } else {
     createMaterialRow(); updateMatSharesSum();
@@ -543,6 +565,9 @@ document.getElementById('addMaterialBtn').onclick = () => {
 let isSubmitting = false;
 const form = document.getElementById('supplierForm');
 if (form) {
+  form.addEventListener('input', () => {
+    isSupplierFormDirty = true;
+  });
   // Remove any existing handlers to prevent duplicates
   form.onsubmit = null;
   form.addEventListener('submit', function(e) {
@@ -559,14 +584,14 @@ if (form) {
     let obj = {};
     for (let [k, v] of fd.entries()) {
       if (k === 'material_origin') continue;
-      else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences') || k.endsWith('lead_time_weeks')) { obj[k] = parseFloat(v); }
+      else if (k.endsWith('width') || k.endsWith('weight') || k.endsWith('price') || k.endsWith('moq') || k.endsWith('numberOfReferences') || k.endsWith('fabric_lead_time_weeks') || k.endsWith('lead_time_weeks')) { obj[k] = parseFloat(v); }
       else { obj[k] = v; }
     }
     obj['material_origin'] = getMaterialOriginFromForm();
     const totalShare = obj['material_origin'].reduce((acc, v) => acc + v.share, 0);
     if (totalShare > 1.0001 || obj['material_origin'].some(m => isNaN(m.share) || m.share < 0.01 || m.share > 1)) {
       document.getElementById('matOriginWarn').style.display = '';
-      document.getElementById('matOriginWarn').innerText = 'Material shares total must not exceed 1 and all shares must be between 0.01 and 1.';
+      document.getElementById('matOriginWarn').innerText = 'Composition shares must add up to 100% and each fibre must be between 1% and 100%.';
       isSubmitting = false;
       return false;
     }
@@ -592,7 +617,8 @@ if (form) {
           e.target.dataset.editIndex = '';
           document.getElementById('materialsSection').innerHTML = '';
           document.getElementById('status').innerText = '';
-          document.querySelector('.modal-content h2').textContent = 'Enter Supplier Information';
+          document.querySelector('.modal-content h2').textContent = 'Supplier information';
+          resetSupplierFormState();
           modal.classList.remove('active');
         }, 1500);
       } else {

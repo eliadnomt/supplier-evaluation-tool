@@ -4,6 +4,7 @@ from typing import List, Optional, Any
 @dataclass
 class Supplier:
     supplier: str
+    fabricName: Optional[str]
     price_eur_per_m: float
     lead_time_weeks: float
     moq_m: float
@@ -34,3 +35,4 @@ class Supplier:
     weight_gm2: Optional[float] = None
     gross_width: Optional[float] = None
     product: Optional[str] = None
+    fabric_lead_time_weeks: Optional[float] = None
