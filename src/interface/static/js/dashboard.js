@@ -158,30 +158,96 @@ function updateChartSelector() {
   });
 }
 
-// Weight slider event handlers
+// Weight slider event handlers with validation
 const weightSliders = ['ecobalyse', 'transparency', 'price', 'leadTime', 'moq'];
+const weightTotalValue = document.getElementById('weightTotalValue');
+const weightWarning = document.getElementById('weightWarning');
+
+function calculateTotalWeight() {
+  let total = 0;
+  weightSliders.forEach(axis => {
+    const slider = document.getElementById(axis + 'Weight');
+    if (slider) {
+      total += parseInt(slider.value) || 0;
+    }
+  });
+  return total;
+}
+
+function updateWeightTotal() {
+  const total = calculateTotalWeight();
+  if (weightTotalValue) {
+    weightTotalValue.textContent = total;
+  }
+  if (weightWarning) {
+    if (total > 100) {
+      weightWarning.style.display = 'inline';
+    } else {
+      weightWarning.style.display = 'none';
+    }
+  }
+}
+
+function getCurrentWeights() {
+  return {
+    ecobalyse: parseInt(document.getElementById('ecobalyseWeight').value) || 0,
+    transparency: parseInt(document.getElementById('transparencyWeight').value) || 0,
+    price: parseInt(document.getElementById('priceWeight').value) || 0,
+    leadTime: parseInt(document.getElementById('leadTimeWeight').value) || 0,
+    moq: parseInt(document.getElementById('moqWeight').value) || 0
+  };
+}
+
 weightSliders.forEach(axis => {
   const slider = document.getElementById(axis + 'Weight');
   const valueDisplay = document.getElementById(axis + 'WeightValue');
   if (slider && valueDisplay) {
     slider.addEventListener('input', (e) => {
-      valueDisplay.textContent = e.target.value;
+      const newValue = parseInt(e.target.value);
+      
+      // Calculate total of all OTHER sliders (excluding this one)
+      let otherTotal = 0;
+      weightSliders.forEach(otherAxis => {
+        if (otherAxis !== axis) {
+          const otherSlider = document.getElementById(otherAxis + 'Weight');
+          if (otherSlider) {
+            otherTotal += parseInt(otherSlider.value) || 0;
+          }
+        }
+      });
+      
+      const maxAllowed = 100 - otherTotal;
+      
+      // Prevent exceeding 100% total
+      if (newValue > maxAllowed) {
+        slider.value = maxAllowed;
+        valueDisplay.textContent = maxAllowed;
+      } else {
+        valueDisplay.textContent = newValue;
+      }
+      
+      updateWeightTotal();
     });
   }
 });
+
+// Initialize total display
+updateWeightTotal();
 
 // Get recommendation button handler
 getRecommendationBtn.onclick = async () => {
   const selectedChart = chartSelector.value;
   
   // Get weights from sliders
-  const weights = {
-    ecobalyse: parseInt(document.getElementById('ecobalyseWeight').value),
-    transparency: parseInt(document.getElementById('transparencyWeight').value),
-    price: parseInt(document.getElementById('priceWeight').value),
-    leadTime: parseInt(document.getElementById('leadTimeWeight').value),
-    moq: parseInt(document.getElementById('moqWeight').value)
-  };
+  const weights = getCurrentWeights();
+  const totalWeight = calculateTotalWeight();
+  
+  // Validate that weights sum to 100
+  if (totalWeight !== 100) {
+    recommendationContent.innerHTML = `<p style="color: #d32f2f;">Please ensure all weights sum to exactly 100% (currently ${totalWeight}%).</p>`;
+    recommendationResults.style.display = 'block';
+    return;
+  }
   
   // Fetch suppliers based on selected chart
   try {
@@ -189,33 +255,85 @@ getRecommendationBtn.onclick = async () => {
     let suppliers = await response.json();
     suppliers = suppliers.filter(s => !s.error);
     
-    // Filter by chart if not "all"
-    if (selectedChart !== 'all') {
-      // Group suppliers by material category
+    // If "all charts" is selected, generate recommendations per chart
+    if (selectedChart === 'all') {
       const groups = groupSuppliersByMaterial(suppliers);
-      const categoryKey = selectedChart.toLowerCase();
-      if (groups[categoryKey]) {
-        suppliers = groups[categoryKey];
-      } else {
-        // Try to find by matching chart title
-        const allCategories = Object.keys(groups);
-        const matchingCategory = allCategories.find(cat => 
-          categoryToTitle(cat).toLowerCase() === selectedChart.toLowerCase()
-        );
-        if (matchingCategory) {
-          suppliers = groups[matchingCategory];
+      const categories = Object.keys(groups);
+      
+      if (categories.length === 0) {
+        recommendationContent.innerHTML = '<p>No suppliers available for comparison.</p>';
+        recommendationResults.style.display = 'block';
+        return;
+      }
+      
+      // Generate recommendations for each chart
+      let html = '';
+      categories.forEach(category => {
+        const chartSuppliers = groups[category];
+        if (chartSuppliers.length === 0) return;
+        
+        const recommendedSuppliers = getRecommendedSuppliers(chartSuppliers, weights);
+        const recommendation = generateRecommendationSummary(recommendedSuppliers, weights);
+        
+        // Add chart title
+        html += `<div class="chart-recommendation-section">`;
+        html += `<h5 class="chart-recommendation-title">${categoryToTitle(category)}</h5>`;
+        
+        // Summary
+        html += `<p class="recommendation-summary">${recommendation.summary}</p>`;
+        
+        // Priority order list
+        html += '<ol class="recommendation-list">';
+        recommendedSuppliers.forEach((item, index) => {
+          const supplierDisplayName = item.fabricName 
+            ? `${item.supplier} (${item.fabricName})`
+            : item.supplier;
+          html += `<li><span class="supplier-name">${supplierDisplayName}</span> <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
+        });
+        html += '</ol>';
+        
+        // Caveats
+        if (recommendation.caveats && recommendation.caveats.length > 0) {
+          html += '<p class="recommendation-caveat">';
+          html += '<strong>Note:</strong> ';
+          html += recommendation.caveats.join(' ');
+          html += '</p>';
         }
+        
+        html += `</div>`;
+      });
+      
+      recommendationContent.innerHTML = html;
+      recommendationResults.style.display = 'block';
+      return;
+    }
+    
+    // Single chart selected - filter suppliers by chart
+    const groups = groupSuppliersByMaterial(suppliers);
+    const categoryKey = selectedChart.toLowerCase();
+    let chartSuppliers = null;
+    
+    if (groups[categoryKey]) {
+      chartSuppliers = groups[categoryKey];
+    } else {
+      // Try to find by matching chart title
+      const allCategories = Object.keys(groups);
+      const matchingCategory = allCategories.find(cat => 
+        categoryToTitle(cat).toLowerCase() === selectedChart.toLowerCase()
+      );
+      if (matchingCategory) {
+        chartSuppliers = groups[matchingCategory];
       }
     }
     
-    if (suppliers.length === 0) {
+    if (!chartSuppliers || chartSuppliers.length === 0) {
       recommendationContent.innerHTML = '<p>No suppliers available for the selected chart.</p>';
       recommendationResults.style.display = 'block';
       return;
     }
     
-    // Get recommendations
-    const recommendedSuppliers = getRecommendedSuppliers(suppliers, weights);
+    // Get recommendations for single chart
+    const recommendedSuppliers = getRecommendedSuppliers(chartSuppliers, weights);
     const recommendation = generateRecommendationSummary(recommendedSuppliers, weights);
     
     // Display results
@@ -238,7 +356,10 @@ function displayRecommendation(recommendedSuppliers, recommendation) {
   // Priority order list
   html += '<ol class="recommendation-list">';
   recommendedSuppliers.forEach((item, index) => {
-    html += `<li><span class="supplier-name">${item.supplier}</span> <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
+    const supplierDisplayName = item.fabricName 
+      ? `${item.supplier} (${item.fabricName})`
+      : item.supplier;
+    html += `<li><span class="supplier-name">${supplierDisplayName}</span> <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
   });
   html += '</ol>';
   

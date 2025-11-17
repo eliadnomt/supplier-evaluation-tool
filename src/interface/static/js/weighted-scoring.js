@@ -5,26 +5,41 @@
  * Higher weighted score = better recommendation (since 9 is best on normalized radar chart)
  */
 function calculateWeightedScore(supplierScores, weights) {
+  // Ensure all scores are valid numbers
+  const ecobalyseScore = (supplierScores.ecobalyse != null && !isNaN(supplierScores.ecobalyse)) ? supplierScores.ecobalyse : 5;
+  const transparencyScore = (supplierScores.traceability != null && !isNaN(supplierScores.traceability)) ? supplierScores.traceability : 5;
+  const priceScore = (supplierScores.price != null && !isNaN(supplierScores.price)) ? supplierScores.price : 5;
+  const leadTimeScore = (supplierScores.leadTime != null && !isNaN(supplierScores.leadTime)) ? supplierScores.leadTime : 5;
+  const moqScore = (supplierScores.moq != null && !isNaN(supplierScores.moq)) ? supplierScores.moq : 5;
+  
   // Normalize weights so they sum to 100
   const totalWeight = weights.ecobalyse + weights.transparency + weights.price + 
                        weights.leadTime + weights.moq;
-  const normalizedWeights = totalWeight > 0 ? {
+  
+  if (totalWeight === 0) {
+    return {
+      weightedScore: 0,
+      normalizedWeights: { ecobalyse: 0, transparency: 0, price: 0, leadTime: 0, moq: 0 }
+    };
+  }
+  
+  const normalizedWeights = {
     ecobalyse: weights.ecobalyse / totalWeight * 100,
     transparency: weights.transparency / totalWeight * 100,
     price: weights.price / totalWeight * 100,
     leadTime: weights.leadTime / totalWeight * 100,
     moq: weights.moq / totalWeight * 100
-  } : { ecobalyse: 20, transparency: 20, price: 20, leadTime: 20, moq: 20 };
+  };
   
   // Calculate weighted score
   // Note: On normalized radar chart, 9 = best, 1 = worst for all axes
   // Higher weighted score = better overall performance
   const weightedScore = 
-    (supplierScores.ecobalyse * normalizedWeights.ecobalyse / 100) +
-    (supplierScores.transparency * normalizedWeights.transparency / 100) +
-    (supplierScores.price * normalizedWeights.price / 100) +
-    (supplierScores.leadTime * normalizedWeights.leadTime / 100) +
-    (supplierScores.moq * normalizedWeights.moq / 100);
+    (ecobalyseScore * normalizedWeights.ecobalyse / 100) +
+    (transparencyScore * normalizedWeights.transparency / 100) +
+    (priceScore * normalizedWeights.price / 100) +
+    (leadTimeScore * normalizedWeights.leadTime / 100) +
+    (moqScore * normalizedWeights.moq / 100);
   
   return {
     weightedScore: Math.round(weightedScore * 100) / 100,
@@ -45,6 +60,7 @@ function getRecommendedSuppliers(suppliers, weights) {
     const { weightedScore } = calculateWeightedScore(score, weights);
     return {
       supplier: score.supplier,
+      fabricName: score.fabricName || '',
       weightedScore: weightedScore,
       scores: score
     };
@@ -69,62 +85,58 @@ function generateRecommendationSummary(recommendedSuppliers, weights) {
   const scores = topSupplier.scores;
   
   // Identify priority metrics (highest weights)
+  // Note: scores object uses 'traceability' but weights use 'transparency'
   const weightEntries = [
     { name: 'Ecobalyse', weight: weights.ecobalyse, score: scores.ecobalyse },
-    { name: 'Transparency', weight: weights.transparency, score: scores.transparency },
+    { name: 'Transparency', weight: weights.transparency, score: scores.traceability },
     { name: 'Price', weight: weights.price, score: scores.price },
     { name: 'Lead Time', weight: weights.leadTime, score: scores.leadTime },
     { name: 'MOQ', weight: weights.moq, score: scores.moq }
   ];
   
-  // Sort by weight to find priorities
+  // Sort by weight to find priorities - include ALL non-zero metrics
   const sortedByWeight = [...weightEntries].sort((a, b) => b.weight - a.weight);
-  const topPriorities = sortedByWeight
+  const allPriorities = sortedByWeight
     .filter(w => w.weight > 0)
-    .slice(0, 2)
     .map(w => w.name);
   
-  // Build summary sentence
-  const priorityText = topPriorities.length === 2 
-    ? `${topPriorities[0]} and ${topPriorities[1]}`
-    : topPriorities[0] || 'the selected criteria';
+  // Build summary sentence with all non-zero priorities
+  let priorityText = '';
+  if (allPriorities.length === 0) {
+    priorityText = 'the selected criteria';
+  } else if (allPriorities.length === 1) {
+    priorityText = allPriorities[0].toLowerCase();
+  } else if (allPriorities.length === 2) {
+    priorityText = `${allPriorities[0]} and ${allPriorities[1]}`.toLowerCase();
+  } else {
+    // For 3+ priorities, use "X, Y, and Z" format
+    const last = allPriorities[allPriorities.length - 1];
+    const rest = allPriorities.slice(0, -1);
+    priorityText = `${rest.join(', ')}, and ${last}`.toLowerCase();
+  }
   
-  const summary = `Based on ${priorityText.toLowerCase()} as priority metrics, ${topSupplier.supplier} is the best option.`;
+  // Format supplier name with fabric name if available
+  const supplierDisplayName = topSupplier.fabricName 
+    ? `${topSupplier.supplier} (${topSupplier.fabricName})`
+    : topSupplier.supplier;
   
-  // Identify caveats - metrics that are being sacrificed (low weight + low score)
+  const summary = `Based on ${priorityText} as priority metrics, ${supplierDisplayName} is the best option.`;
+  
+  // Identify caveats - metrics that are being sacrificed (all zero-weight metrics)
   const caveats = [];
   
-  // Find metrics with low weight (being de-prioritized) that also have low scores
-  // These are metrics being sacrificed for the chosen priorities
-  const sacrificedMetrics = weightEntries.filter(metric => {
-    // Low weight means it's not prioritized (< 20%)
-    // Low score means the recommended supplier performs poorly on it (< 5)
-    return metric.weight < 20 && metric.score < 5;
-  });
+  // Find all metrics with zero weight (being sacrificed)
+  const sacrificedMetrics = weightEntries.filter(metric => metric.weight === 0);
   
   if (sacrificedMetrics.length > 0) {
     const sacrificedNames = sacrificedMetrics.map(m => m.name).join(', ');
-    caveats.push(`The following metrics are being sacrificed: ${sacrificedNames.toLowerCase()}.`);
-  }
-  
-  // Check for sustainability sacrifice specifically
-  if (scores.ecobalyse < 5 && weights.ecobalyse < 20) {
-    if (!sacrificedMetrics.find(m => m.name === 'Ecobalyse')) {
-      caveats.push('Sustainability (Ecobalyse) is being sacrificed for other priorities.');
-    }
-  }
-  
-  // Check for transparency sacrifice specifically
-  if (scores.transparency < 5 && weights.transparency < 20) {
-    if (!sacrificedMetrics.find(m => m.name === 'Transparency')) {
-      caveats.push('Transparency is being sacrificed for other priorities.');
-    }
+    caveats.push(`The following metrics are being sacrificed: ${sacrificedNames}.`);
   }
   
   return {
     summary,
     caveats,
-    priorities: topPriorities
+    priorities: allPriorities
   };
 }
 

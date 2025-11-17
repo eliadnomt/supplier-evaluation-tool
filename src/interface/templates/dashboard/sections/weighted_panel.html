@@ -15,38 +15,52 @@
       <div class="weight-slider-item">
         <label>
           <span>Ecobalyse</span>
-          <span class="weight-value" id="ecobalyseWeightValue">20</span>%
+          <span class="weight-value-wrapper">
+            <span class="weight-value" id="ecobalyseWeightValue">0</span>%
+          </span>
         </label>
-        <input type="range" id="ecobalyseWeight" min="0" max="100" value="20" class="weight-slider">
+        <input type="range" id="ecobalyseWeight" min="0" max="100" value="0" class="weight-slider">
       </div>
       <div class="weight-slider-item">
         <label>
           <span>Transparency</span>
-          <span class="weight-value" id="transparencyWeightValue">20</span>%
+          <span class="weight-value-wrapper">
+            <span class="weight-value" id="transparencyWeightValue">0</span>%
+          </span>
         </label>
-        <input type="range" id="transparencyWeight" min="0" max="100" value="20" class="weight-slider">
+        <input type="range" id="transparencyWeight" min="0" max="100" value="0" class="weight-slider">
       </div>
       <div class="weight-slider-item">
         <label>
           <span>Price</span>
-          <span class="weight-value" id="priceWeightValue">20</span>%
+          <span class="weight-value-wrapper">
+            <span class="weight-value" id="priceWeightValue">0</span>%
+          </span>
         </label>
-        <input type="range" id="priceWeight" min="0" max="100" value="20" class="weight-slider">
+        <input type="range" id="priceWeight" min="0" max="100" value="0" class="weight-slider">
       </div>
       <div class="weight-slider-item">
         <label>
           <span>Lead Time</span>
-          <span class="weight-value" id="leadTimeWeightValue">20</span>%
+          <span class="weight-value-wrapper">
+            <span class="weight-value" id="leadTimeWeightValue">0</span>%
+          </span>
         </label>
-        <input type="range" id="leadTimeWeight" min="0" max="100" value="20" class="weight-slider">
+        <input type="range" id="leadTimeWeight" min="0" max="100" value="0" class="weight-slider">
       </div>
       <div class="weight-slider-item">
         <label>
           <span>MOQ</span>
-          <span class="weight-value" id="moqWeightValue">20</span>%
+          <span class="weight-value-wrapper">
+            <span class="weight-value" id="moqWeightValue">0</span>%
+          </span>
         </label>
-        <input type="range" id="moqWeight" min="0" max="100" value="20" class="weight-slider">
+        <input type="range" id="moqWeight" min="0" max="100" value="0" class="weight-slider">
       </div>
+    </div>
+    <div class="weight-total" id="weightTotal">
+      <span>Total: <strong id="weightTotalValue">0</strong>%</span>
+      <span class="weight-warning" id="weightWarning" style="display: none;">Total cannot exceed 100%</span>
     </div>
 
     <button class="btn btn-recommend" id="getRecommendationBtn">GET RECOMMENDATION</button>
