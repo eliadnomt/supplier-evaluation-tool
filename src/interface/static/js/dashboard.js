@@ -420,8 +420,8 @@ function buildFabricCard(supplier, actualIndex) {
   
   const traceabilityCount = calculateTraceabilityCount(supplier);
   const highlightFields = [
-    { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)})`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A', infoTooltip: 'TODO: Explain how the Ecobalyse score is used' },
-    { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true }
+    { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)})`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A', infoTooltip: 'Ecobalyse score for the specific garment type. This is the basis for the Ecobalyse score on the radar charts. The higher the score, the worse the environmental impact.' },
+    { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true, infoTooltip: 'One point is awarded for each traceable step, and summed across the five steps. This is the basis for the traceability score on the radar charts.' }
   ];
   
   const otherFields = [

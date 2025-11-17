@@ -10,25 +10,9 @@ Make the composition share height the same as the other fields in the row
 SUPPLIER SECTION
 Composition detail (currently material origin)
 - set default option to be coton, but leave other options available
-- make the composition share percentage not decimal
 - remove the spinning information (have it set in Bourrienne params)
-- add fibre origin with drop down list of countries like the other origin fields
-Country of origin renamed to Transformation origins
 Fabric production specifications
 - tricotage/tissage, make weaving the default
-Gross fabric width (cm)
-Weight (g/m2)
-MOQ for production
-Price for production(euro/m)
-Lead time for production (weeks)
-
-PRODUCTION RUN SECTION
-Garment type (take options from bourrienne config)
-Temps de confection (<5 min, 5-15 min, 15-30 min, 30-60 min, >60 min)
- - this will correspond to the different making complexities
- Number of garments (estimated)
- Price per garment (estimated)
- Lead time for garment production (weeks)
 
 
 BOURRIENNE CONFIG
