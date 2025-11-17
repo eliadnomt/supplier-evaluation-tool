@@ -1,6 +1,6 @@
 // Shared form utilities for supplier forms
 
-function fillSelect(id, url, nameAttr=false) {
+function fillSelect(id, url, nameAttr=false, defaultValue=null) {
   fetch(url).then(r=>r.json()).then(arr => {
     const s = document.getElementById(id);
     if (!s) return;
@@ -16,11 +16,16 @@ function fillSelect(id, url, nameAttr=false) {
       if(nameAttr && v.name) opt.text = v.name;
       s.appendChild(opt);
     }
+    // Set default value if provided and exists in options
+    if (defaultValue !== null && s.querySelector(`option[value="${defaultValue}"]`)) {
+      s.value = defaultValue;
+    }
   });
 }
 
 let materialsData = [];
 let countriesData = [];
+let materialRowDefaults = { id: null, share: null, country: null }; // Defaults for new material rows
 const MAKING_COMPLEXITY_OPTIONS = [
   { value: 'very-low', label: 'Very Low (<5 min)' },
   { value: 'low', label: 'Low (5–15 min)' },
@@ -29,7 +34,7 @@ const MAKING_COMPLEXITY_OPTIONS = [
   { value: 'very-high', label: 'Very High (>60 min)' }
 ];
 
-function fillMakingComplexitySelect(id) {
+function fillMakingComplexitySelect(id, defaultValue=null) {
   const select = document.getElementById(id);
   if (!select) return;
   select.innerHTML = '';
@@ -39,6 +44,10 @@ function fillMakingComplexitySelect(id) {
     optionEl.text = opt.label;
     select.appendChild(optionEl);
   });
+  // Set default value if provided and exists in options
+  if (defaultValue !== null && select.querySelector(`option[value="${defaultValue}"]`)) {
+    select.value = defaultValue;
+  }
 }
 
 function fetchMaterialEnums(callback) {
@@ -63,6 +72,12 @@ function fetchMaterialEnums(callback) {
 }
 
 function createMaterialRow(rowData) {
+  // Use provided rowData, or fall back to defaults, or use empty values
+  const data = rowData || {};
+  const materialId = data.id || materialRowDefaults.id || null;
+  const share = data.share || materialRowDefaults.share || null;
+  const country = data.country || materialRowDefaults.country || null;
+  
   const row = document.createElement('div');
   row.className = 'material-row';
   const matSel = document.createElement('select');
@@ -75,14 +90,19 @@ function createMaterialRow(rowData) {
     opt.text = label;
     matSel.appendChild(opt);
   }
-  matSel.value = rowData && rowData.id ? rowData.id : (matSel.options[0]?.value || '');
+  // Set material: use provided value, or default, or first option
+  if (materialId && matSel.querySelector(`option[value="${materialId}"]`)) {
+    matSel.value = materialId;
+  } else {
+    matSel.value = matSel.options[0]?.value || '';
+  }
   row.appendChild(matSel);
   const shareInput = document.createElement('input');
   shareInput.type = 'number';
   shareInput.min = 1;
   shareInput.max = 100;
   shareInput.step = 1;
-  shareInput.value = rowData && rowData.share ? rowData.share * 100 : '';
+  shareInput.value = share !== null ? (share * 100) : '';
   shareInput.placeholder = 'share (%)';
   row.appendChild(shareInput);
 
@@ -104,8 +124,9 @@ function createMaterialRow(rowData) {
     opt.text = label;
     countrySel.appendChild(opt);
   }
-  if (rowData && rowData.country) {
-    countrySel.value = rowData.country;
+  // Set country: use provided value, or default, or leave empty
+  if (country && countrySel.querySelector(`option[value="${country}"]`)) {
+    countrySel.value = country;
   }
   row.appendChild(countrySel);
   const removeBtn = document.createElement('button');
@@ -159,14 +180,33 @@ function updateMatSharesSum() {
   }
 }
 
-function loadEnums() {
-  fillSelect('productSelect', '/api/enums/products');
-  fillSelect('spinningCountrySelect', '/api/enums/countries');
-  fillSelect('fabricCountrySelect', '/api/enums/countries');
-  fillSelect('dyeingCountrySelect', '/api/enums/countries');
-  fillSelect('makingCountrySelect', '/api/enums/countries');
-  fillSelect('fabricProcessSelect', '/api/enums/fabricProcess');
-  fillMakingComplexitySelect('makingComplexitySelect');
+function setMaterialRowDefaults(defaults) {
+  // Set defaults for new material rows
+  // Usage: setMaterialRowDefaults({ id: 'ei-coton-organic', share: 0.5, country: 'FR' })
+  if (defaults.id !== undefined) materialRowDefaults.id = defaults.id;
+  if (defaults.share !== undefined) materialRowDefaults.share = defaults.share;
+  if (defaults.country !== undefined) materialRowDefaults.country = defaults.country;
+}
+
+function loadEnums(defaults={}) {
+  // Usage: Pass defaults object like { 
+  //   productSelect: 'chemise', 
+  //   makingComplexitySelect: 'medium',
+  //   materialRowDefaults: { id: 'ei-coton-organic', share: 0.5, country: 'FR' }
+  // }
+  fillSelect('productSelect', '/api/enums/products', false, defaults.productSelect);
+  fillSelect('spinningCountrySelect', '/api/enums/countries', false, defaults.spinningCountrySelect);
+  fillSelect('fabricCountrySelect', '/api/enums/countries', false, defaults.fabricCountrySelect);
+  fillSelect('dyeingCountrySelect', '/api/enums/countries', false, defaults.dyeingCountrySelect);
+  fillSelect('makingCountrySelect', '/api/enums/countries', false, defaults.makingCountrySelect);
+  fillSelect('fabricProcessSelect', '/api/enums/fabricProcess', false, defaults.fabricProcessSelect);
+  fillMakingComplexitySelect('makingComplexitySelect', defaults.makingComplexitySelect);
+  
+  // Set material row defaults if provided
+  if (defaults.materialRowDefaults) {
+    setMaterialRowDefaults(defaults.materialRowDefaults);
+  }
+  
   fetchMaterialEnums(()=>{});
 }
 

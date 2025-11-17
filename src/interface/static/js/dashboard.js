@@ -69,7 +69,18 @@ addBtn.onclick = () => {
     matOriginWarn.innerText = '';
   }
   modal.classList.add('active');
-  loadEnums();
+  // Set default values for select menus and material rows (customize these values as needed)
+  loadEnums({
+    productSelect: 'chemise',  // Default garment type
+    makingComplexitySelect: 'very-high',  // Default manufacture time
+    fabricProcessSelect: 'weaving',  // Default fabric process
+    // Material row defaults (applied when clicking "Add fibre")
+    materialRowDefaults: {
+      id: 'ei-coton-organic',  // Default material ID (uncomment and set as needed)
+      // share: 0.5,  // Default share as decimal (0.5 = 50%, uncomment and set as needed)
+      // country: 'FR',  // Default country code (uncomment and set as needed)
+    }
+  });
 };
 
 closeBtn.onclick = () => {
