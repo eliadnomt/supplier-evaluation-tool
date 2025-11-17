@@ -3,34 +3,123 @@
     <button class="modal-close" id="closeModal">&times;</button>
     <h2>Supplier information</h2>
     <form id="supplierForm">
-      <label>Supplier Name <input name="supplier" required></label>
-      <label>Fabric Name <input name="fabricName" required></label>
+      <label>
+        <span class="label-title">Supplier Name
+          <span class="info-icon" tabindex="0" data-tooltip="Name of the supplier">ⓘ</span>
+        </span>
+        <input name="supplier" required>
+      </label>
+      <label>
+        <span class="label-title">Fabric Name
+          <span class="info-icon" tabindex="0" data-tooltip="Name of the specific fabric including any certifications or special features">ⓘ</span>
+        </span>
+        <input name="fabricName" required>
+      </label>
 
-      <label id="comp-detail-label">Composition detail</label>
+      <label id="comp-detail-label">
+        <span class="label-title">Composition detail
+          <span class="info-icon" tabindex="0" data-tooltip="Composition of the fabric, as a percentage of each fibre. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+      </label>
       <div id="materialsSection"></div>
       <button type="button" class="add-btn" id="addFibreBtn">Add fibre</button>
       <div id="matOriginWarn" class="warn" style="display:none"></div>
 
       <h3>Fibre transformation origins</h3>
-      <label>Spinning <select name="countrySpinning" id="spinningCountrySelect"></select></label>
-      <label>Fabric <select name="countryFabric" id="fabricCountrySelect"></select></label>
-      <label>Dyeing <select name="countryDyeing" id="dyeingCountrySelect"></select></label>
-      <label>Making <select name="countryMaking" id="makingCountrySelect"></select></label>
+      <label>
+        <span class="label-title">Spinning
+          <span class="info-icon" tabindex="0" data-tooltip="Country of origin of the spinning process. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="countrySpinning" id="spinningCountrySelect"></select>
+      </label>
+      <label>
+        <span class="label-title">Fabric
+          <span class="info-icon" tabindex="0" data-tooltip="Country of origin of the fabric production. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="countryFabric" id="fabricCountrySelect"></select>
+      </label>
+      <label>
+        <span class="label-title">Dyeing
+          <span class="info-icon" tabindex="0" data-tooltip="Country of origin of the dyeing process. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="countryDyeing" id="dyeingCountrySelect"></select>
+      </label>
+      <label>
+        <span class="label-title">Making
+          <span class="info-icon" tabindex="0" data-tooltip="Country of origin of the fabrication process. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="countryMaking" id="makingCountrySelect"></select>
+      </label>
 
       <h3>Fabric production specifications</h3>
-      <label>Knitting or weaving <select name="fabricProcess" id="fabricProcessSelect"></select></label>
-      <label>Gross fabric width (cm) <input name="gross_width" type="number" step="0.01" required></label>
-      <label>Weight (g/m²) <input name="weight_gm2" type="number" step="0.1" required></label>
-      <label>MOQ (m) <input name="moq_m" type="number" step="0.01" required></label>
-      <label>Price €/m <input name="price_eur_per_m" type="number" step="0.01" required></label>
-      <label>Lead Time (weeks) <input name="fabric_lead_time_weeks" type="number" step="1" required></label>
+      <label>
+        <span class="label-title">Knitting or weaving
+          <span class="info-icon" tabindex="0" data-tooltip="Type of fabrication process. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="fabricProcess" id="fabricProcessSelect"></select>
+      </label>
+      <label>
+        <span class="label-title">Gross fabric width (cm)
+          <span class="info-icon" tabindex="0" data-tooltip="Width of the fabric in centimeters">ⓘ</span>
+        </span>
+        <input name="gross_width" type="number" step="0.01" required>
+      </label>
+      <label>
+        <span class="label-title">Weight (g/m²)
+          <span class="info-icon" tabindex="0" data-tooltip="Weight of the fabric in grams per square meter">ⓘ</span>
+        </span>
+        <input name="weight_gm2" type="number" step="1" required>
+      </label>
+      <label>
+        <span class="label-title">MOQ (m)
+          <span class="info-icon" tabindex="0" data-tooltip="Minimum order quantity in meters">ⓘ</span>
+        </span>
+        <input name="moq_m" type="number" step="1" required>
+      </label>
+      <label>
+        <span class="label-title">Price €/m
+          <span class="info-icon" tabindex="0" data-tooltip="Price of the fabric in euros per meter">ⓘ</span>
+        </span>
+        <input name="price_eur_per_m" type="number" step="0.01" required>
+      </label>
+      <label>
+        <span class="label-title">Lead Time (weeks)
+          <span class="info-icon" tabindex="0" data-tooltip="Estimated lead time for fabric production in weeks">ⓘ</span>
+        </span>
+        <input name="fabric_lead_time_weeks" type="number" step="1" required>
+      </label>
 
-      <h2>Production run example parameters</h2>
-      <label>Garment type <select name="product" id="productSelect"></select></label>
-      <label>Manufacture time (minutes) <select name="makingComplexity" id="makingComplexitySelect"></select></label>
-      <label>Number of garments <input name="numberOfReferences" type="number" required></label>
-      <label>Price per garment (€) <input name="price" type="number" step="0.01" required></label>
-      <label>Lead Time for garment production (weeks) <input name="lead_time_weeks" type="number" step="1" required></label>
+      <h2>Production run sample parameters</h2>
+      <label>
+        <span class="label-title">Garment type
+          <span class="info-icon" tabindex="0" data-tooltip="Type of garment to be produced. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="product" id="productSelect"></select>
+      </label>
+      <label>
+        <span class="label-title">Manufacture time (minutes)
+          <span class="info-icon" tabindex="0" data-tooltip="Estimated time to manufacture one garment in minutes. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <select name="makingComplexity" id="makingComplexitySelect"></select>
+      </label>
+      <label>
+        <span class="label-title">Number of garments
+          <span class="info-icon" tabindex="0" data-tooltip="Number of garments to be produced. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <input name="numberOfReferences" type="number" required>
+      </label>
+      <label>
+        <span class="label-title">Price per garment (€)
+          <span class="info-icon" tabindex="0" data-tooltip="Price of one garment in euros. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <input name="price" type="number" step="0.01" required>
+      </label>
+      <label>
+        <span class="label-title">Lead Time for garment production (weeks)
+          <span class="info-icon" tabindex="0" data-tooltip="Estimated lead time for garment production in weeks. This is used to calculate the Ecobalyse score.">ⓘ</span>
+        </span>
+        <input name="lead_time_weeks" type="number" step="1" required>
+      </label>
 
       <button type="submit" class="btn" style="margin-top: 20px;">Save Supplier</button>
       <div id="status"></div>
