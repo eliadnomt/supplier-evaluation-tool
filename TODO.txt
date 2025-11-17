@@ -2,22 +2,4 @@ Make the whole tool in french
 
 charts
 - keep outer border but remove grid lines (don't correspond to anything)
-
-dashboard
-- update description to be more catchy/helpful.
-
-weighted comparison
-- all the percentages need to add up to 100, so they should all start at zero, and have a checker when the sum total exceeds 100
-- when apply to all charts is selected, the recommendation should be done per chart (makes no sense to have a recommendation for a supplier
-for a single material, with different material options available)
-
-ecobalyse
-- update first explainer to have the link to the official ecobalyse simulator. 
-- assumed constant fields update to 'assumed parameters'
-- have a card: Bourrienne specifications
-    - business size: small-business
-    - spinning type: conventional spinning (with explainer) for natural materials
-    - dyeing type: always average (explain what it means)
-- do garment type cards (similar to the fabric cards in the supplier list) using an emoji for each type
-- remove the variable fields table, include a statement that all other fields are dynamically set through the 'add supplier' modal
-- get rid of how scores are calculated, score is no longer normalised, just shows percentage difference on actual score comparison.
+- make them appear with a button, don't have them automatically open

@@ -344,6 +344,8 @@ def _row_to_supplier(row: dict) -> Supplier:
 
 @app.route('/api/scores')
 def compute_scores():
+    if not os.path.exists(SUPPLIERS_YAML):
+        return jsonify([])
     data = load_yaml(SUPPLIERS_YAML) or []
     results = []
     for row in (data if isinstance(data, list) else data.get('suppliers', [])):
@@ -371,8 +373,17 @@ def compute_scores():
 @app.route('/api/suppliers/for-radar')
 def suppliers_for_radar():
     """Return suppliers with all data needed for radar chart scoring"""
+    if not os.path.exists(SUPPLIERS_YAML):
+        print(f"Suppliers file not found at: {SUPPLIERS_YAML}")
+        return jsonify([])
     data = load_yaml(SUPPLIERS_YAML) or []
+    if not data:
+        print(f"Suppliers file is empty or failed to load: {SUPPLIERS_YAML}")
+        return jsonify([])
     suppliers_list = data if isinstance(data, list) else data.get('suppliers', [])
+    if not suppliers_list:
+        print(f"No suppliers found in data. Data type: {type(data)}, Data: {data}")
+        return jsonify([])
     results = []
     
     for row in suppliers_list:
@@ -415,6 +426,9 @@ def suppliers_for_radar():
             results.append(supplier_data)
         except Exception as e:
             # Include supplier name even if scoring fails
+            print(f"Error processing supplier {row.get('supplier', '(unknown)')}: {e}")
+            import traceback
+            traceback.print_exc()
             results.append({
                 'supplier': row.get('supplier', '(unknown)'),
                 'error': str(e),

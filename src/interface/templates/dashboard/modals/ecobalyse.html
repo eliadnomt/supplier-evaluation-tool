@@ -4,68 +4,44 @@
     <h2>How This Tool Uses Ecobalyse</h2>
 
     <div class="info-section">
-      <p>This tool integrates with the Ecobalyse API to calculate environmental impact scores for textile suppliers. The Ecobalyse score provides a comprehensive environmental assessment based on multiple factors including material composition, production processes, and geographic locations.</p>
+      <p>This tool integrates with the Ecobalyse API to calculate environmental impact scores for textile suppliers. The Ecobalyse score provides a comprehensive environmental assessment based on multiple factors including material composition, production processes, and geographic locations. For more information, visit the <a href="https://fabrique-numerique.gitbook.io/ecobalyse" target="_blank">official Ecobalyse simulator</a>.</p>
+      <p>All other fields are dynamically set through the 'Add Supplier' modal based on the information you provide.</p>
     </div>
 
     <div class="info-section">
-      <h3>Assumed Constant Fields</h3>
-      <p>The following fields are set to default values based on the example product and remain constant across all supplier evaluations:</p>
-      <div class="constant-fields">
-        <h4>For Shirts</h4>
-        <ul>
-          <li><strong>Product type:</strong> 'chemise'</li>
-          <li><strong>Final product weight:</strong> 0.1 kg</li>
-          <li><strong>Upcycled:</strong> No</li>
-          <li><strong>Buttons (trims):</strong> 10 plastic buttons</li>
-          <li><strong>Garment distribution:</strong> France</li>
-          <li><strong>Garment use:</strong> France</li>
-          <li><strong>End of life:</strong> France</li>
-        </ul>
-      </div>
-      <div class="constant-fields">
-        <h4>For Sweaters</h4>
-        <ul>
-          <li><strong>Product type:</strong> 'pull'</li>
-          <li><strong>Final product weight:</strong> 0.2 kg</li>
-          <li><strong>Upcycled:</strong> No</li>
-          <li><strong>Buttons (trims):</strong> None</li>
-          <li><strong>Garment distribution:</strong> France</li>
-          <li><strong>Garment use:</strong> France</li>
-          <li><strong>End of life:</strong> France</li>
-        </ul>
-      </div>
-    </div>
+      <h3>Assumed Parameters</h3>
+      
+      <p>In Ecobalyse, durability is one of the parameters used to evaluate the overall impact of a garment. Because Bourrienne is classified as a small business, its “repair incentive” score—part of the non-physical durability coefficient—is calculated solely from the ratio between the average repair cost and the garment’s reference sale price.</p>
+      <p>When dyeing details are missing for a supplier, the tool simply defaults to Ecobalyse’s “average dyeing” profile, which combines the impacts of discontinuous dyeing (more water and energy, low dye concentration) and continuous dyeing (less water but higher, more polluting dye concentrations). This gives a realistic baseline when the exact process is unknown.</p>
 
-    <div class="info-section">
-      <h3>Variable Fields Based on Supplier Information</h3>
-      <p>The following fields are dynamically adjusted based on the supplier data you provide:</p>
-      <div class="adjustable-fields">
-        <h4>Supplier-Specific Parameters</h4>
-        <div class="field-list">
-          <div class="field-item">Supplier business size</div>
-          <div class="field-item">Price (€ per m)</div>
-          <div class="field-item">MOQ (m)</div>
-          <div class="field-item">Material origin (type, percentage of composition, spinning type)</div>
-          <div class="field-item">Spinning origin</div>
-          <div class="field-item">Fabric production origin</div>
-          <div class="field-item">Fabric processing type</div>
-          <div class="field-item">Dyeing origin</div>
-          <div class="field-item">Dyeing processing type</div>
-          <div class="field-item">Gross fabric width (cm)</div>
-          <div class="field-item">Weight (g/m²)</div>
-          <div class="field-item">Garment type</div>
-          <div class="field-item">Garment production origin</div>
-          <div class="field-item">Garment production complexity</div>
-          <div class="field-item">Number of garments</div>
-          <div class="field-item">Price per garment</div>
+      <!-- Garment Type Cards -->
+      <div class="garment-type-cards">
+        <div class="garment-type-card">
+          <img src="/static/icons/shirt.png" alt="Shirt" class="garment-icon">
+          <h4 class="garment-type-title">Chemise</h4>
+          <span class="info-icon garment-info-icon" tabindex="0" data-tooltip="Final product weight: 0.1 kg&#10;Upcycled: No&#10;Buttons (trims): 10 plastic buttons">ⓘ</span>
+        </div>
+        <div class="garment-type-card">
+          <img src="/static/icons/sweater.png" alt="Sweater" class="garment-icon">
+          <h4 class="garment-type-title">Pull</h4>
+          <span class="info-icon garment-info-icon" tabindex="0" data-tooltip="Final product weight: 0.2 kg&#10;Upcycled: No&#10;Buttons (trims): None">ⓘ</span>
+        </div>
+        <div class="garment-type-card">
+          <img src="/static/icons/skirt.jpg" alt="Skirt" class="garment-icon">
+          <h4 class="garment-type-title">Jupe</h4>
+          <span class="info-icon garment-info-icon" tabindex="0" data-tooltip="Final product weight: 0.2 kg&#10;Upcycled: No&#10;Buttons (trims): 2 plastic buttons">ⓘ</span>
+        </div>
+        <div class="garment-type-card">
+          <img src="/static/icons/dress.jpg" alt="Dress" class="garment-icon">
+          <h4 class="garment-type-title">Robe</h4>
+          <span class="info-icon garment-info-icon" tabindex="0" data-tooltip="Final product weight: 0.3 kg&#10;Upcycled: No&#10;Buttons (trims): 20 plastic buttons">ⓘ</span>
+        </div>
+        <div class="garment-type-card">
+          <img src="/static/icons/jacket.png" alt="Jacket" class="garment-icon">
+          <h4 class="garment-type-title">Veste</h4>
+          <span class="info-icon garment-info-icon" tabindex="0" data-tooltip="Final product weight: 0.4 kg&#10;Upcycled: No&#10;Buttons (trims): 10 plastic buttons">ⓘ</span>
         </div>
       </div>
-    </div>
-
-    <div class="info-section">
-      <h3>How Scores Are Calculated</h3>
-      <p>The Ecobalyse API returns an environmental impact score (ECS). This score is normalized on a scale from 0-10 to be displayed as an independent variable the radar charts, allowing for direct comparison across suppliers.</p>
-      <p>For more detailed information about Ecobalyse methodology, please visit the <a href="https://fabrique-numerique.gitbook.io/ecobalyse" target="_blank">official Ecobalyse documentation</a>.</p>
     </div>
   </div>
 </div>

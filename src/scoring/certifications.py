@@ -1,10 +1,16 @@
 from typing import Dict, List
 from ..models.supplier import Supplier
 from ..utils.yaml_loader import load_yaml
+import os
 
 def certification_bonus(supplier: Supplier, config_root: str) -> float:
-    scoring_cfg = load_yaml(f"{config_root}/scoring.yaml")
-    cmap = load_yaml("data/lookups/certification_map.yaml")
+    scoring_cfg = load_yaml(f"{config_root}/scoring.yaml") or {}
+    
+    # Resolve certification_map.yaml path relative to project root
+    # config_root is something like /app/config, so go up two levels to get project root
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(config_root)))
+    cert_map_path = os.path.join(project_root, "data", "lookups", "certification_map.yaml")
+    cmap = load_yaml(cert_map_path) or {}
 
     t1 = set(cmap.get("tier1", []))
     t2 = set(cmap.get("tier2", []))
