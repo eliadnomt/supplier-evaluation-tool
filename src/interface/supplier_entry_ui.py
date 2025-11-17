@@ -196,6 +196,18 @@ def static_files(filename):
 # --------- Enum API ---------
 @app.route('/api/enums/<enum_name>')
 def get_enum(enum_name):
+    # For products, return only the garment_types from bourrienne.yaml
+    # This ensures we have exactly what's configured, not what the API returns
+    if enum_name == 'products':
+        garment_types = BOURRIENNE_DEFAULTS.get('garment_types', [])
+        if garment_types:
+            # Return as a list of strings (matching the format expected by the frontend)
+            return jsonify(garment_types)
+        # Fallback to API if no garment_types configured
+        data = get_enum_response(enum_name)
+        return jsonify(data)
+    
+    # For all other enums, use the API response
     data = get_enum_response(enum_name)
     return jsonify(data)
 

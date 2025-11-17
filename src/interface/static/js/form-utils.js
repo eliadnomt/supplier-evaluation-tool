@@ -1,10 +1,26 @@
 // Shared form utilities for supplier forms
 
-function fillSelect(id, url, nameAttr=false, defaultValue=null) {
+function fillSelect(id, url, nameAttr=false, defaultValue=null, preserveValue=null) {
   fetch(url).then(r=>r.json()).then(arr => {
     const s = document.getElementById(id);
     if (!s) return;
+    
+    // Store current value if we need to preserve it
+    const currentValue = preserveValue !== null ? preserveValue : (s.value || null);
+    
     s.innerHTML = '';
+    
+    // If we have a current value that's not in the filtered list, add it first
+    if (currentValue && !arr.some(v => {
+      const val = typeof(v)==='object' ? (v.id || v.name || JSON.stringify(v)) : v;
+      return val === currentValue;
+    })) {
+      const opt = document.createElement('option');
+      opt.value = currentValue;
+      opt.text = currentValue;
+      s.appendChild(opt);
+    }
+    
     for (const v of arr) {
       let val = v;
       if (typeof(v)==='object') val = v.id || v.name || JSON.stringify(v);
@@ -16,9 +32,14 @@ function fillSelect(id, url, nameAttr=false, defaultValue=null) {
       if(nameAttr && v.name) opt.text = v.name;
       s.appendChild(opt);
     }
-    // Set default value if provided and exists in options
+    
+    // Set value: prefer defaultValue, then preserved current value, then first option
     if (defaultValue !== null && s.querySelector(`option[value="${defaultValue}"]`)) {
       s.value = defaultValue;
+    } else if (currentValue && s.querySelector(`option[value="${currentValue}"]`)) {
+      s.value = currentValue;
+    } else if (s.options.length > 0) {
+      s.value = s.options[0].value;
     }
   });
 }
@@ -192,9 +213,10 @@ function loadEnums(defaults={}) {
   // Usage: Pass defaults object like { 
   //   productSelect: 'chemise', 
   //   makingComplexitySelect: 'medium',
+  //   preserveProduct: 'existing-product', // Preserve this value even if not in filtered list
   //   materialRowDefaults: { id: 'ei-coton-organic', share: 0.5, country: 'FR' }
   // }
-  fillSelect('productSelect', '/api/enums/products', false, defaults.productSelect);
+  fillSelect('productSelect', '/api/enums/products', false, defaults.productSelect, defaults.preserveProduct);
   fillSelect('spinningCountrySelect', '/api/enums/countries', false, defaults.spinningCountrySelect);
   fillSelect('fabricCountrySelect', '/api/enums/countries', false, defaults.fabricCountrySelect);
   fillSelect('dyeingCountrySelect', '/api/enums/countries', false, defaults.dyeingCountrySelect);

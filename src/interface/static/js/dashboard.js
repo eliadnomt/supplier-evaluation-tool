@@ -641,7 +641,8 @@ function editSupplier(index, supplier) {
   resetSupplierFormState();
   
   // Load enums first (this will clear all selects)
-  loadEnums();
+  // Preserve the product value in case it's not in the filtered list
+  loadEnums({ preserveProduct: supplierValues.product });
   
   // Function to restore all form values after enums are loaded
   const restoreFormValues = () => {

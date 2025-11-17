@@ -6,9 +6,6 @@ charts
 dashboard
 - update description to be more catchy/helpful.
 
-add supplier
-- limit the garment type select menu to those in the bourrienne config
-
 weighted comparison
 - all the percentages need to add up to 100, so they should all start at zero, and have a checker when the sum total exceeds 100
 - when apply to all charts is selected, the recommendation should be done per chart (makes no sense to have a recommendation for a supplier
