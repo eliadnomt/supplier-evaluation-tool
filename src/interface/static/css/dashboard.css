@@ -235,6 +235,10 @@ body.weighted-panel-open .container {
   cursor: help;
   position: relative;
 }
+.info-icon.info-inline {
+  font-size: 11px;
+  margin-left: 4px;
+}
 .info-icon::after {
   content: attr(data-tooltip);
   position: absolute;

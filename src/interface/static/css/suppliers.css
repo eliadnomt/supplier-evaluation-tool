@@ -133,6 +133,82 @@
   color: #333;
   font-weight: 300;
 }
+.supplier-composition {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #fafafa;
+}
+.supplier-composition-title {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 6px;
+}
+.composition-header {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #999;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ececec;
+}
+.composition-item {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+}
+.composition-item:last-child {
+  border-bottom: none;
+}
+.composition-material {
+  font-weight: 500;
+  color: #222;
+}
+.composition-share,
+.composition-origin {
+  color: #444;
+  font-weight: 400;
+}
+.supplier-origins-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+.origin-card {
+  background: #f8f8f8;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.origin-card-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #777;
+}
+.origin-card-value {
+  font-size: 12px;
+  color: #222;
+}
+.supplier-production-grid {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
 
 .suppliers-loading {
   text-align: center;
@@ -148,5 +224,82 @@
   color: #999;
   font-size: 12px;
   text-transform: none;
+}
+
+.supplier-group {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.supplier-group-header-static {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.supplier-group-count {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #777;
+}
+
+.supplier-group-body {
+  padding: 0 18px 18px;
+}
+
+.supplier-fabric-card {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.supplier-fabric-card:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.fabric-toggle {
+  width: 100%;
+  border: none;
+  background: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.fabric-toggle.expanded {
+  color: #000;
+}
+
+.fabric-product {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #777;
+  margin-left: 10px;
+}
+
+.supplier-fabric-meta {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #777;
+  margin-bottom: 10px;
+}
+
+.fabric-details {
+  padding-bottom: 18px;
 }
 

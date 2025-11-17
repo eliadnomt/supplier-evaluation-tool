@@ -22,3 +22,27 @@
   price: 395.0
   weight_gm2: 129.0
   gross_width: 150.0
+- supplier: BORGHI
+  fabricName: Art CR ISPIRATO fin 800
+  product: chemise
+  price_eur_per_m: 16.53
+  lead_time_weeks: 4.0
+  fabric_lead_time_weeks: 6.0
+  moq_m: 480.0
+  material_origin:
+  - id: ei-coton-organic
+    share: 1.0
+    spinning: ConventionalSpinning
+    country: REO
+  countrySpinning: Pays inconnu (par défaut)
+  countryFabric: Pays inconnu (par défaut)
+  countryDyeing: Pays inconnu (par défaut)
+  countryMaking: Région - Europe de l'Ouest
+  fabricProcess: weaving
+  dyeingProcess: average
+  makingComplexity: very-high
+  businessSize: small-business
+  numberOfReferences: 450
+  price: 350.0
+  weight_gm2: 129.0
+  gross_width: 150.0

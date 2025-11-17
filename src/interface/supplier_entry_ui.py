@@ -371,7 +371,7 @@ def suppliers_for_radar():
             ecobalyse_score = score_result[0] if score_result else None
             
             # Get product type from supplier or assumptions
-            assumptions = load_yaml(f"{CONFIG_ROOT}/assumptions.yaml") or {}
+            assumptions = BOURRIENNE_DEFAULTS or {}
             product_type = s.product or assumptions.get("default_product", "tshirt")
             
             # Build supplier data with all fields needed for radar chart and supplier list

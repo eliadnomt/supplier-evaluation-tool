@@ -3,6 +3,7 @@ Adapter that prepares the Ecobalyse payload from a Supplier + assumptions,
 then asks EcobalyseClient for a score.
 """
 from typing import Optional, Dict, Any, List
+import os
 from ..models.supplier import Supplier
 from ..utils.yaml_loader import load_yaml
 from ..utils.country_lookup import get_country_code, set_country_cache
@@ -127,8 +128,16 @@ def _build_payload(s: Supplier, assumptions: Dict[str, Any], countries_data: Lis
         payload["business"] = s.businessSize
     return payload
 
+def _load_assumptions(config_root: str) -> Dict[str, Any]:
+    bourrienne_path = os.path.join(config_root, "bourrienne.yaml")
+    if os.path.exists(bourrienne_path):
+        data = load_yaml(bourrienne_path) or {}
+        if data:
+            return data
+    return {}
+
 def ecobalyse_score_for_supplier(supplier: Supplier, config_root: str) -> Optional[float]:
-    assumptions = load_yaml(f"{config_root}/assumptions.yaml") or {}
+    assumptions = _load_assumptions(config_root)
     ecoconfig = load_yaml(f"{config_root}/ecobalyse.yaml") or {}
 
     # Fetch countries list to build translation mapping

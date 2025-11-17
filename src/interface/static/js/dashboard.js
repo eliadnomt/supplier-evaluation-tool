@@ -19,6 +19,19 @@ const chartSelector = document.getElementById('chartSelector');
 const getRecommendationBtn = document.getElementById('getRecommendationBtn');
 const recommendationResults = document.getElementById('recommendationResults');
 const recommendationContent = document.getElementById('recommendationContent');
+const countryDisplayLookup = {};
+fetch('/api/enums/countries').then(r=>r.json()).then(arr => {
+  (arr || []).forEach(entry => {
+    if (typeof entry === 'string') {
+      countryDisplayLookup[entry] = entry;
+    } else if (entry && typeof entry === 'object') {
+      const key = entry.code || entry.id || entry.name;
+      const label = entry.name || entry.label || key;
+      if (key) countryDisplayLookup[key] = label;
+      if (entry.name) countryDisplayLookup[entry.name] = entry.name;
+    }
+  });
+}).catch(()=>{});
 let isSupplierFormDirty = false;
 
 function resetSupplierFormState() {
@@ -306,110 +319,267 @@ function getProductTypeDisplay(productType) {
   return productMap[productType] || productType || 'Product';
 }
 
+function humanizeSlug(value) {
+  if (!value) return 'Not provided';
+  return String(value).replace(/^ei[-_]/i, '')
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, ch => ch.toUpperCase());
+}
+
+const makingComplexityLabels = {
+  'very-low': 'Very Low (<5 min)',
+  'low': 'Low (5–15 min)',
+  'medium': 'Medium (15–30 min)',
+  'high': 'High (30–60 min)',
+  'very-high': 'Very High (>60 min)'
+};
+
+function formatMakingComplexity(value) {
+  return makingComplexityLabels[value] || humanizeSlug(value);
+}
+
+function formatFabricProcess(value) {
+  if (!value) return 'Not provided';
+  if (value === 'weaving') return 'Weaving';
+  return humanizeSlug(value);
+}
+
+function formatMaterialName(id) {
+  return humanizeSlug(id);
+}
+
+function formatCountryValue(value) {
+  if (!value) return 'Not provided';
+  return countryDisplayLookup[value] || value;
+}
+
 function renderSuppliers(suppliers) {
   suppliersList.innerHTML = '';
   
-  // Sort suppliers alphabetically by name
-  const sortedSuppliers = [...suppliers].sort((a, b) => {
-    const nameA = (a.supplier || '').toLowerCase();
-    const nameB = (b.supplier || '').toLowerCase();
-    return nameA.localeCompare(nameB);
+  if (!suppliers || suppliers.length === 0) {
+    suppliersList.innerHTML = '<div class="suppliers-empty">No suppliers found. Add a supplier to get started.</div>';
+    return;
+  }
+  
+  const grouped = {};
+  suppliers.forEach((supplier, originalIndex) => {
+    const supplierName = (supplier.supplier || 'Unnamed Supplier').trim() || 'Unnamed Supplier';
+    if (!grouped[supplierName]) grouped[supplierName] = [];
+    grouped[supplierName].push({ supplier, originalIndex });
   });
   
-  sortedSuppliers.forEach((supplier, originalIndex) => {
-    // Find original index for edit/delete operations
-    const index = suppliers.findIndex(s => s === supplier);
-    const actualIndex = index >= 0 ? index : originalIndex;
-    const item = document.createElement('div');
-    item.className = 'supplier-item';
+  Object.keys(grouped).sort((a, b) => a.localeCompare(b)).forEach(name => {
+    const fabrics = grouped[name].sort((a, b) => {
+      const fabricA = (a.supplier.fabricName || '').toLowerCase();
+      const fabricB = (b.supplier.fabricName || '').toLowerCase();
+      return fabricA.localeCompare(fabricB);
+    });
+    
+    const groupCard = document.createElement('div');
+    groupCard.className = 'supplier-group';
     
     const header = document.createElement('div');
-    header.className = 'supplier-item-header';
-    header.textContent = supplier.supplier || 'Unnamed Supplier';
-    item.appendChild(header);
+    header.className = 'supplier-group-header-static';
+    header.innerHTML = `<span>${name}</span><span class="supplier-group-count">${fabrics.length} fabric${fabrics.length > 1 ? 's' : ''}</span>`;
+    groupCard.appendChild(header);
     
-    const details = document.createElement('div');
-    details.className = 'supplier-details';
+    const fabricList = document.createElement('div');
+    fabricList.className = 'supplier-group-body';
     
-    // Calculate traceability count (number of known production steps)
-    const traceabilityCount = calculateTraceabilityCount(supplier);
+    fabrics.forEach(({ supplier, originalIndex }) => {
+      fabricList.appendChild(buildFabricCard(supplier, originalIndex));
+    });
     
-    // Separate Ecobalyse and Traceability fields (always shown, on their own row)
-    const highlightFields = [
-      { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)})`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A', isHighlight: true },
-      { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true }
-    ];
-    
-    // Other fields
-    const otherFields = [
-      { label: 'Fabric Name', value: supplier.fabricName },
-      { label: 'MOQ (m)', value: supplier.moq_m },
-      { label: 'Price €/m', value: supplier.price_eur_per_m },
-      { label: 'Fabric Lead Time (weeks)', value: supplier.fabric_lead_time_weeks },
-      { label: 'Weight (g/m²)', value: supplier.weight_gm2 },
-      { label: 'Gross Width (cm)', value: supplier.gross_width }
-    ];
-    
-    // Render highlight fields first (on their own row)
-    const highlightRow = document.createElement('div');
-    highlightRow.className = 'supplier-details-highlight';
-    highlightFields.forEach(field => {
+    groupCard.appendChild(fabricList);
+    suppliersList.appendChild(groupCard);
+  });
+}
+
+function buildFabricCard(supplier, actualIndex) {
+  const card = document.createElement('div');
+  card.className = 'supplier-item';
+  
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'fabric-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.innerHTML = `<span>${supplier.fabricName || 'Fabric entry'}</span><span class="fabric-product">${getProductTypeDisplay(supplier.product)}</span>`;
+  card.appendChild(toggle);
+  
+  const meta = document.createElement('div');
+  meta.className = 'supplier-fabric-meta';
+  meta.textContent = `Product: ${getProductTypeDisplay(supplier.product)}`;
+  
+  const detailsWrapper = document.createElement('div');
+  detailsWrapper.className = 'fabric-details';
+  detailsWrapper.hidden = true;
+  detailsWrapper.appendChild(meta);
+  
+  const details = document.createElement('div');
+  details.className = 'supplier-details';
+  
+  const traceabilityCount = calculateTraceabilityCount(supplier);
+  const highlightFields = [
+    { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)})`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A', infoTooltip: 'TODO: Explain how the Ecobalyse score is used' },
+    { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true }
+  ];
+  
+  const otherFields = [
+    { label: 'MOQ (m)', value: supplier.moq_m },
+    { label: 'Price €/m', value: supplier.price_eur_per_m },
+    { label: 'Fabric Lead Time (weeks)', value: supplier.fabric_lead_time_weeks },
+    { label: 'Weight (g/m²)', value: supplier.weight_gm2 },
+    { label: 'Gross Width (cm)', value: supplier.gross_width }
+  ];
+  
+  const highlightRow = document.createElement('div');
+  highlightRow.className = 'supplier-details-highlight';
+  highlightFields.forEach(field => {
+    const detail = document.createElement('div');
+    detail.className = 'supplier-detail supplier-detail-highlight';
+    const labelWrapper = document.createElement('span');
+    labelWrapper.className = 'supplier-detail-label supplier-detail-label-bold';
+    labelWrapper.textContent = field.label + ':';
+    if (field.infoTooltip) {
+      const icon = document.createElement('span');
+      icon.className = 'info-icon info-inline';
+      icon.setAttribute('tabindex', '0');
+      icon.setAttribute('data-tooltip', field.infoTooltip);
+      icon.textContent = 'ⓘ';
+      labelWrapper.appendChild(icon);
+    }
+    const value = document.createElement('span');
+    value.className = 'supplier-detail-value';
+    value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
+    detail.appendChild(labelWrapper);
+    detail.appendChild(value);
+    highlightRow.appendChild(detail);
+  });
+  details.appendChild(highlightRow);
+  
+  const otherFieldsContainer = document.createElement('div');
+  otherFieldsContainer.className = 'supplier-details-regular';
+  otherFields.forEach(field => {
+    if (field.value !== undefined && field.value !== null && field.value !== '') {
       const detail = document.createElement('div');
-      detail.className = 'supplier-detail supplier-detail-highlight';
+      detail.className = 'supplier-detail';
       const label = document.createElement('span');
-      label.className = 'supplier-detail-label supplier-detail-label-bold';
+      label.className = 'supplier-detail-label';
       label.textContent = field.label + ':';
       const value = document.createElement('span');
       value.className = 'supplier-detail-value';
       value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
       detail.appendChild(label);
       detail.appendChild(value);
-      highlightRow.appendChild(detail);
-    });
-    details.appendChild(highlightRow);
-    
-    // Render other fields in a grid container
-    const otherFieldsContainer = document.createElement('div');
-    otherFieldsContainer.className = 'supplier-details-regular';
-    otherFields.forEach(field => {
-      // Show field if it has a value (including 0)
-      if (field.value !== undefined && field.value !== null && field.value !== '') {
-        const detail = document.createElement('div');
-        detail.className = 'supplier-detail';
-        const label = document.createElement('span');
-        label.className = 'supplier-detail-label';
-        label.textContent = field.label + ':';
-        const value = document.createElement('span');
-        value.className = 'supplier-detail-value';
-        value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
-        detail.appendChild(label);
-        detail.appendChild(value);
-        otherFieldsContainer.appendChild(detail);
-      }
-    });
-    if (otherFieldsContainer.children.length > 0) {
-      details.appendChild(otherFieldsContainer);
+      otherFieldsContainer.appendChild(detail);
     }
-    
-    item.appendChild(details);
-    
-    // Add edit/delete buttons
-    const actions = document.createElement('div');
-    actions.className = 'supplier-actions';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'supplier-btn supplier-btn-edit';
-    editBtn.textContent = 'Edit';
-    editBtn.onclick = () => editSupplier(actualIndex, supplier);
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'supplier-btn supplier-btn-delete';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.onclick = () => deleteSupplier(actualIndex, supplier.supplier);
-    actions.appendChild(editBtn);
-    actions.appendChild(deleteBtn);
-    item.appendChild(actions);
-    
-    suppliersList.appendChild(item);
   });
+  if (otherFieldsContainer.children.length > 0) {
+    details.appendChild(otherFieldsContainer);
+  }
+
+  if (supplier.material_origin && supplier.material_origin.length > 0) {
+    const compositionWrapper = document.createElement('div');
+    compositionWrapper.className = 'supplier-composition';
+    const title = document.createElement('div');
+    title.className = 'supplier-composition-title';
+    title.textContent = 'Composition detail';
+    compositionWrapper.appendChild(title);
+
+    const headerRow = document.createElement('div');
+    headerRow.className = 'composition-header';
+    headerRow.innerHTML = '<span>Material</span><span>Share</span><span>Origin</span>';
+    compositionWrapper.appendChild(headerRow);
+
+    supplier.material_origin.forEach((mat, idx) => {
+      const line = document.createElement('div');
+      line.className = 'composition-item';
+      const materialName = formatMaterialName(mat.id) || `Material ${idx + 1}`;
+      const sharePercent = mat.share != null ? `${(mat.share * 100).toFixed(0)}%` : 'N/A';
+      const origin = formatCountryValue(mat.country);
+      line.innerHTML = `<span class="composition-material">${materialName}</span><span class="composition-share">${sharePercent}</span><span class="composition-origin">${origin}</span>`;
+      compositionWrapper.appendChild(line);
+    });
+
+    details.appendChild(compositionWrapper);
+  }
+
+  const transformationFields = [
+    { label: 'Spinning origin', value: formatCountryValue(supplier.countrySpinning) },
+    { label: 'Fabric origin', value: formatCountryValue(supplier.countryFabric) },
+    { label: 'Dyeing origin', value: formatCountryValue(supplier.countryDyeing) },
+    { label: 'Making origin', value: formatCountryValue(supplier.countryMaking) }
+  ];
+  const transformationGrid = document.createElement('div');
+  transformationGrid.className = 'supplier-origins-grid';
+  transformationFields.forEach(field => {
+    const card = document.createElement('div');
+    card.className = 'origin-card';
+    const label = document.createElement('span');
+    label.className = 'origin-card-label';
+    label.textContent = field.label;
+    const value = document.createElement('span');
+    value.className = 'origin-card-value';
+    value.textContent = field.value || 'Not provided';
+    card.appendChild(label);
+    card.appendChild(value);
+    transformationGrid.appendChild(card);
+  });
+  details.appendChild(transformationGrid);
+
+  const productionFields = [
+    { label: 'Knitting/weaving process', value: formatFabricProcess(supplier.fabricProcess) },
+    { label: 'Manufacture time category', value: formatMakingComplexity(supplier.makingComplexity) },
+    { label: 'Garment lead time (weeks)', value: supplier.lead_time_weeks },
+    { label: 'Number of garments', value: supplier.numberOfReferences },
+    { label: 'Price per garment (€)', value: supplier.price }
+  ];
+  const productionContainer = document.createElement('div');
+  productionContainer.className = 'supplier-production-grid';
+  productionFields.forEach(field => {
+    if (field.value !== undefined && field.value !== null && field.value !== '') {
+      const detail = document.createElement('div');
+      detail.className = 'supplier-detail';
+      const label = document.createElement('span');
+      label.className = 'supplier-detail-label';
+      label.textContent = field.label + ':';
+      const value = document.createElement('span');
+      value.className = 'supplier-detail-value';
+      value.textContent = typeof field.value === 'number' ? field.value.toLocaleString() : (field.value || 'N/A');
+      detail.appendChild(label);
+      detail.appendChild(value);
+      productionContainer.appendChild(detail);
+    }
+  });
+  if (productionContainer.children.length > 0) {
+    details.appendChild(productionContainer);
+  }
+  
+  detailsWrapper.appendChild(details);
+  
+  const actions = document.createElement('div');
+  actions.className = 'supplier-actions';
+  const editBtn = document.createElement('button');
+  editBtn.className = 'supplier-btn supplier-btn-edit';
+  editBtn.textContent = 'Edit';
+  editBtn.onclick = () => editSupplier(actualIndex, supplier);
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'supplier-btn supplier-btn-delete';
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.onclick = () => deleteSupplier(actualIndex, supplier.supplier);
+  actions.appendChild(editBtn);
+  actions.appendChild(deleteBtn);
+  detailsWrapper.appendChild(actions);
+  
+  toggle.addEventListener('click', () => {
+    const expanded = detailsWrapper.hidden;
+    detailsWrapper.hidden = !expanded;
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.classList.toggle('expanded', expanded);
+  });
+  
+  card.appendChild(detailsWrapper);
+  return card;
 }
 
 function deleteSupplier(index, supplierName) {
@@ -437,6 +607,7 @@ function editSupplier(index, supplier) {
   // Store all supplier values before loading enums (which will clear selects)
   const supplierValues = {
     supplier: supplier.supplier || '',
+    fabricName: supplier.fabricName,
     product: supplier.product,
     businessSize: supplier.businessSize,
     countrySpinning: supplier.countrySpinning,
@@ -448,6 +619,7 @@ function editSupplier(index, supplier) {
     makingComplexity: supplier.makingComplexity,
     gross_width: supplier.gross_width,
     weight_gm2: supplier.weight_gm2,
+    fabric_lead_time_weeks: supplier.fabric_lead_time_weeks,
     price_eur_per_m: supplier.price_eur_per_m,
     moq_m: supplier.moq_m,
     numberOfReferences: supplier.numberOfReferences,

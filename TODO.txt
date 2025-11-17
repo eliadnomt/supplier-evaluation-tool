@@ -5,12 +5,9 @@ Remove the explainer on the dashboard (makes it cheap)
 When adding a supplier:
 Sections should be separated between supplier and product information, 
 and Bourrienne use case
-Have little info buttons that show a modal with information about the field,
-or maybe a tool tip when you hover over it/click
+Make the composition share height the same as the other fields in the row
 
 SUPPLIER SECTION
-Supplier Name (same across different products, for colour consistency)
-Fabric Name (100% cotton, 100% cotton GOTS certified, etc.)
 Composition detail (currently material origin)
 - set default option to be coton, but leave other options available
 - make the composition share percentage not decimal
@@ -43,3 +40,9 @@ and robe, it's a chemise-robe, and veste (man capsule had one))
 Spinning type - always conventional spinning if natural material,
 otherwise synthetic spinning
 Dyeing process - always average
+
+Radar charts:
+- deviation from median supplier price, not on a normalised scale. that way it's less cluttered and the shapes won't overlap on each axis.
+- legend should be supplier name and fabric type
+- change axis label to traceability not transparency
+- chart size needs to be fixed not relative, too small axis labels
