@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Supplier Evaluation Tool{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static_files', filename='css/base.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+  {% block modals %}{% endblock %}
+  {% block panels %}{% endblock %}
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+

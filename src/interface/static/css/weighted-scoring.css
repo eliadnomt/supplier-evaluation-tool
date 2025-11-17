@@ -1,0 +1,230 @@
+.weighted-comparison-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+  z-index: 999;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.weighted-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.weighted-panel-header h3 {
+  font-size: 14px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin: 0;
+}
+
+.close-panel-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.close-panel-btn:hover {
+  color: #000;
+}
+
+.weighted-panel-content {
+  padding: 20px;
+  flex: 1;
+}
+
+.chart-selector {
+  margin-bottom: 30px;
+}
+
+.chart-selector label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.chart-selector select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.weight-sliders {
+  margin-bottom: 30px;
+}
+
+.weight-slider-item {
+  margin-bottom: 20px;
+}
+
+.weight-slider-item label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.weight-value {
+  font-weight: 300;
+  color: #666;
+}
+
+.weight-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e0e0e0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.weight-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #333;
+  cursor: pointer;
+}
+
+.weight-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #333;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-recommend {
+  width: 100%;
+  padding: 15px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  margin-bottom: 30px;
+  transition: background 0.2s;
+}
+
+.btn-recommend:hover {
+  background: #555;
+}
+
+.recommendation-results {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.recommendation-results h4 {
+  font-size: 14px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 15px;
+  color: #000;
+}
+
+.recommendation-content {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #333;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.recommendation-content p {
+  margin: 0 0 15px 0;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 12px;
+}
+
+.recommendation-list {
+  list-style: decimal;
+  padding-left: 20px;
+  margin: 15px 0;
+}
+
+.recommendation-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 12px;
+}
+
+.recommendation-list .supplier-name {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.recommendation-list .weighted-score {
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.recommendation-list li:last-child {
+  border-bottom: none;
+}
+
+.recommendation-summary {
+  margin: 0 0 15px 0;
+  padding: 15px;
+  background: #fafafa;
+  border-radius: 4px;
+  border-left: 3px solid #333;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.recommendation-caveat {
+  margin: 15px 0 0 0;
+  padding: 10px;
+  background: #fff3cd;
+  border-radius: 4px;
+  border-left: 3px solid #ffc107;
+  font-size: 12px;
+  color: #856404;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+

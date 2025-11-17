@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from src.api.ecobalyse_client import EcobalyseClient
 from src.utils.yaml_loader import load_yaml
 from src.scoring.final_score import final_csr_score
@@ -148,11 +148,11 @@ def get_enum_response(enum):
 # --------- Pages ---------
 @app.route('/')
 def dashboard():
-    return send_from_directory(THIS_DIR, 'dashboard.html')
+    return render_template('dashboard/index.html')
 
 @app.route('/add')
 def add_page():
-    return send_from_directory(THIS_DIR, 'supplier_form.html')
+    return render_template('supplier_form/index.html')
 
 # --------- Static Files ---------
 @app.route('/static/<path:filename>')

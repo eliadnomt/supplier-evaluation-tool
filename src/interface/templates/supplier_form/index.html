@@ -1,0 +1,57 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Supplier Entry{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static_files', filename='css/supplier-form.css') }}">
+{% endblock %}
+
+{% block body_class %}supplier-form-page{% endblock %}
+
+{% block content %}
+<nav class="supplier-form-nav">
+  <a href="/">Dashboard</a>
+  <a href="/add">Add Supplier</a>
+</nav>
+
+<section class="supplier-form-wrapper">
+  <h2>Enter Supplier Information</h2>
+  <form id="supplierForm" class="supplier-form">
+    <label>Supplier Name: <input name="supplier" required></label>
+    <label>Business Size: <select name="businessSize" id="businessSizeSelect"></select></label>
+    <label id="mat-origin-label">Material origin:</label>
+    <div id="materialsSection"></div>
+    <button type="button" class="add-btn" id="addMaterialBtn">Add Material</button>
+    <div id="matOriginWarn" class="warn" style="display:none"></div>
+
+    <h3>Country of origin</h3>
+    <label>Spinning: <select name="countrySpinning" id="spinningCountrySelect"></select></label>
+    <label>Fabric: <select name="countryFabric" id="fabricCountrySelect"></select></label>
+    <label>Dyeing: <select name="countryDyeing" id="dyeingCountrySelect"></select></label>
+    <label>Making: <select name="countryMaking" id="makingCountrySelect"></select></label>
+
+    <h3>Fabric production specifications</h3>
+    <label>Fabric Process: <select name="fabricProcess" id="fabricProcessSelect"></select></label>
+    <label>Dyeing Process: <select name="dyeingProcess" id="dyeingProcessSelect"></select></label>
+    <label>Making Complexity: <select name="makingComplexity" id="makingComplexitySelect"></select></label>
+    <label>Gross fabric width (cm): <input name="gross_width" type="number" step="0.01" required></label>
+    <label>Weight (g/m²): <input name="weight_gm2" type="number" step="0.1" required></label>
+    <label>Price €/m: <input name="price_eur_per_m" type="number" step="0.01" required></label>
+    <label>MOQ (m): <input name="moq_m" type="number" step="0.01" required></label>
+
+    <h3>Production run specifications</h3>
+    <label>Number of articles: <input name="numberOfReferences" type="number" required></label>
+    <label>Price per article (€): <input name="price" type="number" step="0.01" required></label>
+    <label>Lead Time (weeks): <input name="lead_time_weeks" type="number" step="1" required></label>
+
+    <button type="submit" class="btn-primary">Save Supplier</button>
+    <div id="status"></div>
+  </form>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/js/form-utils.js"></script>
+<script src="/static/js/supplier-form.js"></script>
+{% endblock %}
+

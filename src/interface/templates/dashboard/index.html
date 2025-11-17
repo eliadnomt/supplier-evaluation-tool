@@ -1,0 +1,47 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Supplier Scorecard Tool{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static_files', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static_files', filename='css/radar-charts.css') }}">
+<link rel="stylesheet" href="{{ url_for('static_files', filename='css/suppliers.css') }}">
+<link rel="stylesheet" href="{{ url_for('static_files', filename='css/weighted-scoring.css') }}">
+{% endblock %}
+
+{% block body_class %}dashboard-page{% endblock %}
+
+{% block content %}
+<div class="container">
+  {% include "dashboard/sections/header.html" %}
+  {% include "dashboard/sections/charts.html" %}
+  {% include "dashboard/sections/actions.html" %}
+  {% include "dashboard/sections/suppliers.html" %}
+  {% include "dashboard/sections/description.html" %}
+  {% include "dashboard/sections/footer.html" %}
+</div>
+{% endblock %}
+
+{% block modals %}
+  {% include "dashboard/modals/add_supplier.html" %}
+  {% include "dashboard/modals/ecobalyse.html" %}
+{% endblock %}
+
+{% block panels %}
+  {% include "dashboard/sections/weighted_panel.html" %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/form-utils.js"></script>
+<script src="/static/js/radar-scoring.js"></script>
+<script src="/static/js/radar-charts.js"></script>
+<script src="/static/js/weighted-scoring.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    loadAndRenderRadarCharts();
+  });
+</script>
+{% endblock %}
+

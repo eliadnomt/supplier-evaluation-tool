@@ -1,0 +1,45 @@
+Make the whole tool in french
+Remove the explainer on the dashboard (makes it cheap)
+
+
+When adding a supplier:
+Sections should be separated between supplier and product information, 
+and Bourrienne use case
+Have little info buttons that show a modal with information about the field,
+or maybe a tool tip when you hover over it/click
+
+SUPPLIER SECTION
+Supplier Name (same across different products, for colour consistency)
+Fabric Name (100% cotton, 100% cotton GOTS certified, etc.)
+Composition detail (currently material origin)
+- set default option to be coton, but leave other options available
+- make the composition share percentage not decimal
+- remove the spinning information (have it set in Bourrienne params)
+- add fibre origin with drop down list of countries like the other origin fields
+Country of origin renamed to Transformation origins
+Fabric production specifications
+- tricotage/tissage, make weaving the default
+Gross fabric width (cm)
+Weight (g/m2)
+MOQ for production
+Price for production(euro/m)
+Lead time for production (weeks)
+
+PRODUCTION RUN SECTION
+Garment type (take options from bourrienne config)
+Temps de confection (<5 min, 5-15 min, 15-30 min, 30-60 min, >60 min)
+ - this will correspond to the different making complexities
+ Number of garments (estimated)
+ Price per garment (estimated)
+ Lead time for garment production (weeks)
+
+
+BOURRIENNE CONFIG
+Have a config called Bourrienne-params, with Ecobalyse parameters 
+specific only to Bourrienne:
+Business size - always small-Business
+Garment type - either chemise or pull (also jupe, they had one capsule
+and robe, it's a chemise-robe, and veste (man capsule had one))
+Spinning type - always conventional spinning if natural material,
+otherwise synthetic spinning
+Dyeing process - always average

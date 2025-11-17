@@ -1,0 +1,129 @@
+.charts-section {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.chart-container {
+  flex: 0 0 calc((100% - 80px) / 3);
+  min-width: 280px;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 1200px) {
+  .chart-container {
+    flex: 0 0 calc((100% - 40px) / 2);
+  }
+}
+
+@media (max-width: 700px) {
+  .chart-container {
+    flex: 0 0 100%;
+  }
+}
+
+.chart-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 300;
+  margin-bottom: 5px;
+  margin-top: 0;
+  padding: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.chart-placeholder {
+  width: 100%;
+  height: 300px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  color: #999;
+  font-size: 20px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.chart-container canvas {
+  display: block;
+  margin: 0 auto;
+  position: relative;
+}
+
+.chart-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 5px;
+  margin-bottom: 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.chart-reading-section {
+  max-width: 900px;
+  margin: 0 auto 60px;
+  padding: 30px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.chart-reading-section h3 {
+  font-size: 18px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.chart-reading-section p {
+  margin-bottom: 15px;
+  line-height: 1.6;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: #333;
+}
+
+.chart-reading-section strong {
+  font-weight: 300;
+  color: #000;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
