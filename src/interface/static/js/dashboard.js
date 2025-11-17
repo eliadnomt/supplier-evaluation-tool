@@ -5,11 +5,9 @@ const modal = document.getElementById('addSupplierModal');
 const addBtn = document.getElementById('addSupplierBtn');
 const closeBtn = document.getElementById('closeModal');
 const viewBtn = document.getElementById('viewSuppliersBtn');
-const ecobalyseBtn = document.getElementById('ecobalyseBtn');
+const ecobalyseLogoBtn = document.getElementById('ecobalyseLogoBtn');
 const ecobalyseModal = document.getElementById('ecobalyseModal');
 const closeEcobalyseBtn = document.getElementById('closeEcobalyseModal');
-const howToReadBtn = document.getElementById('howToReadBtn');
-const chartReadingSection = document.getElementById('chartReadingSection');
 const suppliersSection = document.getElementById('suppliersSection');
 const suppliersList = document.getElementById('suppliersList');
 const weightedComparisonBtn = document.getElementById('weightedComparisonBtn');
@@ -93,9 +91,12 @@ modal.onclick = (e) => {
   }
 };
 
-ecobalyseBtn.onclick = () => {
-  ecobalyseModal.classList.add('active');
-};
+if (ecobalyseLogoBtn) {
+  ecobalyseLogoBtn.onclick = () => {
+    ecobalyseModal.classList.add('active');
+  };
+  ecobalyseLogoBtn.style.cursor = 'pointer';
+}
 
 closeEcobalyseBtn.onclick = () => {
   ecobalyseModal.classList.remove('active');
@@ -116,13 +117,6 @@ viewBtn.onclick = () => {
   }
 };
 
-howToReadBtn.onclick = () => {
-  if (chartReadingSection.style.display === 'none') {
-    chartReadingSection.style.display = 'block';
-  } else {
-    chartReadingSection.style.display = 'none';
-  }
-};
 
 // Weighted Comparison Panel Controls
 weightedComparisonBtn.onclick = () => {

@@ -130,9 +130,21 @@ function getOrCreateChartContainer(category) {
   container = document.createElement('div');
   container.className = 'chart-container';
   
+  const titleWrapper = document.createElement('div');
+  titleWrapper.className = 'chart-title-wrapper';
+  
   const title = document.createElement('div');
   title.className = 'chart-title';
   title.textContent = categoryToTitle(category);
+  titleWrapper.appendChild(title);
+  
+  // Add info icon tooltip under the title
+  const infoIcon = document.createElement('span');
+  infoIcon.className = 'info-icon chart-info-icon';
+  infoIcon.setAttribute('tabindex', '0');
+  infoIcon.textContent = 'ⓘ';
+  infoIcon.setAttribute('data-tooltip', 'All axes show percentage difference from the best supplier (except Traceability). Best value = 0% = score 5 (center). Higher percentages = worse performance = lower scores. Traceability shows absolute steps (X/5 traceable). Hover over chart points to see exact percentages.');
+  titleWrapper.appendChild(infoIcon);
   
   const wrapper = document.createElement('div');
   wrapper.className = 'chart-wrapper';
@@ -145,7 +157,7 @@ function getOrCreateChartContainer(category) {
   const legend = document.createElement('div');
   legend.className = 'chart-legend';
   
-  container.appendChild(title);
+  container.appendChild(titleWrapper);
   container.appendChild(wrapper);
   container.appendChild(legend);
   
@@ -165,6 +177,28 @@ function createRadarChart(canvasId, suppliers) {
   if (!container) {
     console.error(`Chart container for ${canvasId} not found`);
     return;
+  }
+  
+  // Ensure container has title wrapper with info icon (for existing containers)
+  let titleWrapper = container.querySelector('.chart-title-wrapper');
+  if (!titleWrapper) {
+    const existingTitle = container.querySelector('.chart-title');
+    if (existingTitle) {
+      titleWrapper = document.createElement('div');
+      titleWrapper.className = 'chart-title-wrapper';
+      existingTitle.parentNode.insertBefore(titleWrapper, existingTitle);
+      titleWrapper.appendChild(existingTitle);
+      
+      // Add info icon if it doesn't exist
+      if (!container.querySelector('.chart-info-icon')) {
+        const infoIcon = document.createElement('span');
+        infoIcon.className = 'info-icon chart-info-icon';
+        infoIcon.setAttribute('tabindex', '0');
+        infoIcon.textContent = 'ⓘ';
+        infoIcon.setAttribute('data-tooltip', 'All axes show percentage difference from the best supplier (except Traceability). Best value = 0% = score 5 (center). Higher percentages = worse performance = lower scores. Traceability shows absolute steps (X/5 traceable). Hover over chart points to see exact percentages.');
+        titleWrapper.appendChild(infoIcon);
+      }
+    }
   }
   
   // If canvas doesn't exist, check for placeholder or wrapper
@@ -258,20 +292,20 @@ function createRadarChart(canvasId, suppliers) {
   
   if (!canvas) return;
   
-  // Fixed chart size: 500x500px
+  // Fixed chart size: 500x500px (CSS display size)
   const fixedChartSize = 500;
   const wrapper = canvas.closest('.chart-wrapper');
   
-  // Set canvas dimensions to fixed size
-  // Note: Don't multiply by devicePixelRatio for Chart.js - it handles this internally
-  canvas.width = fixedChartSize;
-  canvas.height = fixedChartSize;
+  // Get device pixel ratio for high-DPI displays (retina, etc.)
+  const dpr = window.devicePixelRatio || 1;
+  
+  // Set canvas CSS size for layout
   canvas.style.width = fixedChartSize + 'px';
   canvas.style.height = fixedChartSize + 'px';
   canvas.style.display = 'block';
   canvas.style.margin = '0 auto';
   
-  // Set wrapper to match canvas size exactly
+  // Set wrapper to match canvas CSS size exactly
   if (wrapper) {
     wrapper.style.height = fixedChartSize + 'px';
     wrapper.style.width = fixedChartSize + 'px';
@@ -283,6 +317,8 @@ function createRadarChart(canvasId, suppliers) {
     options: {
       responsive: false, // Use explicit dimensions
       maintainAspectRatio: false,
+      devicePixelRatio: dpr, // Enable high-DPI rendering (Chart.js handles font scaling automatically)
+      animation: false, // Disable animation for better performance with high resolution
       layout: {
         padding: {
           top: 0,
@@ -301,7 +337,7 @@ function createRadarChart(canvasId, suppliers) {
           },
           pointLabels: {
             font: {
-              size: 14,
+              size: 14, // Font size in logical pixels - Chart.js scales this correctly with devicePixelRatio
               weight: 300,
               family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
             },

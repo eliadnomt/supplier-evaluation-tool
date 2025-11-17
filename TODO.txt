@@ -1,10 +1,10 @@
 Make the whole tool in french
 
+charts
+- keep outer border but remove grid lines (don't correspond to anything)
+
 dashboard
-- make description sit underneath titles
-- get rid of chart button and have an info tool tip in the chart canvas that explains each chart individually
-- make the ecobalyse logo the button to access ecobalyse information, and have a label below it saying 'click for more info'
-- make the charts have higher resolution
+- update description to be more catchy/helpful.
 
 add supplier
 - limit the garment type select menu to those in the bourrienne config
