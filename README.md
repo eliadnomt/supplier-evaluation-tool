@@ -59,7 +59,7 @@ Then visit [http://localhost:8000](http://localhost:8000) in your browser.
 
 ## Requirements
 
-- Python 3.11+
+- Python 3.13+
 - Flask web framework
 - Ecobalyse API key (set via `ECOBALYSE_API_KEY` environment variable)
 - Docker (optional, for containerized deployment)

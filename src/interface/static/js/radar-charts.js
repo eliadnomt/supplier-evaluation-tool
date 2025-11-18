@@ -323,7 +323,7 @@ function createRadarChart(canvasId, suppliers) {
         padding: {
           top: 0,
           bottom: 0,
-          left: 40, // Keep left offset for centering hexagon under title
+          left: 35, // Keep left offset for centering hexagon under title
           right: 0
         }
       },
@@ -344,13 +344,10 @@ function createRadarChart(canvasId, suppliers) {
             padding: 8
           },
           grid: {
-            display: false, // Remove grid lines
-            drawBorder: true, // Keep outer border
-            borderColor: '#e0e0e0',
-            borderWidth: 1
+            color: '#f0f0f0' // Pale grey grid lines
           },
           angleLines: {
-            display: false // Remove angle lines (spokes)
+            color: '#f0f0f0' // Pale grey angle lines
           }
         }
       },
