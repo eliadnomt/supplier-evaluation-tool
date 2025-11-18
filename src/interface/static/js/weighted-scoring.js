@@ -88,7 +88,7 @@ function generateRecommendationSummary(recommendedSuppliers, weights) {
   // Note: scores object uses 'traceability' but weights use 'transparency'
   const weightEntries = [
     { name: 'Ecobalyse', weight: weights.ecobalyse, score: scores.ecobalyse },
-    { name: 'Transparency', weight: weights.transparency, score: scores.traceability },
+    { name: 'Traceability', weight: weights.transparency, score: scores.traceability },
     { name: 'Price', weight: weights.price, score: scores.price },
     { name: 'Lead Time', weight: weights.leadTime, score: scores.leadTime },
     { name: 'MOQ', weight: weights.moq, score: scores.moq }
@@ -153,4 +153,3 @@ function getAxisDisplayName(axis) {
   };
   return names[axis] || axis;
 }
-
