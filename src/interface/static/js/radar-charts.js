@@ -299,17 +299,27 @@ function createRadarChart(canvasId, suppliers) {
   // Get device pixel ratio for high-DPI displays (retina, etc.)
   const dpr = window.devicePixelRatio || 1;
   
+  // Set wrapper dimensions first to ensure proper layout
+  if (wrapper) {
+    wrapper.style.height = fixedChartSize + 'px';
+    wrapper.style.width = fixedChartSize + 'px';
+    wrapper.style.display = 'block';
+  }
+  
+  // Reset canvas internal dimensions to clear any previous Chart.js state
+  // This prevents stretching issues when charts are recreated
+  // Remove width/height attributes to let Chart.js set them fresh
+  canvas.removeAttribute('width');
+  canvas.removeAttribute('height');
+  
   // Set canvas CSS size for layout
   canvas.style.width = fixedChartSize + 'px';
   canvas.style.height = fixedChartSize + 'px';
   canvas.style.display = 'block';
   canvas.style.margin = '0 auto';
   
-  // Set wrapper to match canvas CSS size exactly
-  if (wrapper) {
-    wrapper.style.height = fixedChartSize + 'px';
-    wrapper.style.width = fixedChartSize + 'px';
-  }
+  // Force a reflow to ensure dimensions are applied before Chart.js initializes
+  void canvas.offsetHeight;
   
   radarCharts[canvasId] = new Chart(canvas, {
     type: 'radar',
