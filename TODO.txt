@@ -3,3 +3,5 @@ Make the whole tool in french
 charts
 - keep outer border but remove grid lines (don't correspond to anything)
 - make them appear with a button, don't have them automatically open
+
+host on a server so people can access the site with a domain name 

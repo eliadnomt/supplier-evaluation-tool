@@ -344,10 +344,13 @@ function createRadarChart(canvasId, suppliers) {
             padding: 8
           },
           grid: {
-            color: '#e0e0e0'
+            display: false, // Remove grid lines
+            drawBorder: true, // Keep outer border
+            borderColor: '#e0e0e0',
+            borderWidth: 1
           },
           angleLines: {
-            color: '#e0e0e0'
+            display: false // Remove angle lines (spokes)
           }
         }
       },
