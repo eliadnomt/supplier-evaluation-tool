@@ -159,7 +159,7 @@ function updateChartSelector() {
 }
 
 // Weight slider event handlers with validation
-const weightSliders = ['ecobalyse', 'traceability', 'price', 'leadTime', 'moq'];
+const weightSliders = ['ecobalyse', 'transparency', 'price', 'leadTime', 'moq'];
 const weightTotalValue = document.getElementById('weightTotalValue');
 const weightWarning = document.getElementById('weightWarning');
 
