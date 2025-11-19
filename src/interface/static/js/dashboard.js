@@ -439,10 +439,8 @@ getRecommendationBtn.onclick = async () => {
         // Priority order list
         html += '<ol class="recommendation-list">';
         recommendedSuppliers.forEach((item, index) => {
-          const supplierDisplayName = item.fabricName 
-            ? `${item.supplier} (${item.fabricName})`
-            : item.supplier;
-          html += `<li><span class="supplier-name">${supplierDisplayName}</span> <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
+          const supplierNameHtml = formatSupplierNameForRecommendation(item);
+          html += `<li>${supplierNameHtml} <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
         });
         html += '</ol>';
         
@@ -459,6 +457,9 @@ getRecommendationBtn.onclick = async () => {
       
       recommendationContent.innerHTML = html;
       recommendationResults.style.display = 'block';
+      
+      // Initialize tooltips for composite fabrics
+      initializeCompositeTooltips();
       return;
     }
     
@@ -502,6 +503,94 @@ getRecommendationBtn.onclick = async () => {
   }
 };
 
+// Helper function to check if a supplier is composite (has multiple materials)
+function isCompositeFabric(supplier) {
+  return supplier && supplier.material_origin && supplier.material_origin.length > 1;
+}
+
+// Helper function to format supplier name with composite styling if needed
+function formatSupplierNameForRecommendation(item) {
+  const supplierDisplayName = item.fabricName 
+    ? `${item.supplier} (${item.fabricName})`
+    : item.supplier;
+  
+  const isComposite = item.originalSupplier && isCompositeFabric(item.originalSupplier);
+  
+  if (isComposite) {
+    // Create a composition description for the tooltip
+    const materials = item.originalSupplier.material_origin || [];
+    const compositionText = materials
+      .map(m => `${(m.share * 100).toFixed(0)}% ${formatMaterialName(m.id)}`)
+      .join(', ');
+    
+    return `<span class="supplier-name supplier-name-composite" data-tooltip="Composite fabric: ${compositionText}">${supplierDisplayName}</span>`;
+  } else {
+    return `<span class="supplier-name">${supplierDisplayName}</span>`;
+  }
+}
+
+// Initialize tooltips for composite fabric indicators
+function initializeCompositeTooltips() {
+  const compositeElements = document.querySelectorAll('.supplier-name-composite[data-tooltip]');
+  compositeElements.forEach(element => {
+    // Remove existing event listeners by cloning
+    const newElement = element.cloneNode(true);
+    element.parentNode.replaceChild(newElement, element);
+    
+    // Add tooltip functionality
+    const tooltip = newElement.getAttribute('data-tooltip');
+    if (tooltip) {
+      newElement.addEventListener('mouseenter', function(e) {
+        showTooltip(e.target, tooltip);
+      });
+      newElement.addEventListener('mouseleave', function() {
+        hideTooltip();
+      });
+      newElement.addEventListener('focus', function(e) {
+        showTooltip(e.target, tooltip);
+      });
+      newElement.addEventListener('blur', function() {
+        hideTooltip();
+      });
+    }
+  });
+}
+
+// Simple tooltip functions
+let tooltipElement = null;
+
+function showTooltip(target, text) {
+  hideTooltip(); // Remove any existing tooltip
+  
+  tooltipElement = document.createElement('div');
+  tooltipElement.className = 'composite-tooltip';
+  tooltipElement.textContent = text;
+  document.body.appendChild(tooltipElement);
+  
+  const rect = target.getBoundingClientRect();
+  tooltipElement.style.left = rect.left + (rect.width / 2) - (tooltipElement.offsetWidth / 2) + 'px';
+  tooltipElement.style.top = rect.top - tooltipElement.offsetHeight - 8 + 'px';
+  
+  // Adjust if tooltip goes off screen
+  const tooltipRect = tooltipElement.getBoundingClientRect();
+  if (tooltipRect.left < 0) {
+    tooltipElement.style.left = '8px';
+  }
+  if (tooltipRect.right > window.innerWidth) {
+    tooltipElement.style.left = (window.innerWidth - tooltipRect.width - 8) + 'px';
+  }
+  if (tooltipRect.top < 0) {
+    tooltipElement.style.top = rect.bottom + 8 + 'px';
+  }
+}
+
+function hideTooltip() {
+  if (tooltipElement) {
+    tooltipElement.remove();
+    tooltipElement = null;
+  }
+}
+
 // Display recommendation results
 function displayRecommendation(recommendedSuppliers, recommendation) {
   let html = '';
@@ -512,10 +601,8 @@ function displayRecommendation(recommendedSuppliers, recommendation) {
   // Priority order list
   html += '<ol class="recommendation-list">';
   recommendedSuppliers.forEach((item, index) => {
-    const supplierDisplayName = item.fabricName 
-      ? `${item.supplier} (${item.fabricName})`
-      : item.supplier;
-    html += `<li><span class="supplier-name">${supplierDisplayName}</span> <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
+    const supplierNameHtml = formatSupplierNameForRecommendation(item);
+    html += `<li>${supplierNameHtml} <span class="weighted-score">(Weighted Score: ${item.weightedScore.toFixed(2)})</span></li>`;
   });
   html += '</ol>';
   
@@ -529,6 +616,9 @@ function displayRecommendation(recommendedSuppliers, recommendation) {
   
   recommendationContent.innerHTML = html;
   recommendationResults.style.display = 'block';
+  
+  // Initialize tooltips for composite fabrics
+  initializeCompositeTooltips();
 }
 
 function loadSuppliers() {

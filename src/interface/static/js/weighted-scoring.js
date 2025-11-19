@@ -69,11 +69,18 @@ function getRecommendedSuppliers(suppliers, weights) {
   // Calculate weighted scores
   const suppliersWithScores = radarScores.map(score => {
     const { weightedScore } = calculateWeightedScore(score, weights);
+    // Find the original supplier object to check if it's composite
+    // Match by supplier name and fabric name
+    const originalSupplier = suppliers.find(s => 
+      (s.supplier || '') === (score.supplier || '') && 
+      (s.fabricName || '') === (score.fabricName || '')
+    );
     return {
       supplier: score.supplier,
       fabricName: score.fabricName || '',
       weightedScore: weightedScore,
-      scores: score
+      scores: score,
+      originalSupplier: originalSupplier // Include original supplier for composite check
     };
   });
   

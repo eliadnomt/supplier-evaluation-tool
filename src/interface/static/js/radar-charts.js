@@ -4,8 +4,16 @@
 const radarCharts = {};
 
 /**
+ * Check if a supplier has multiple materials (composite fabric)
+ */
+function isCompositeFabric(supplier) {
+  return supplier && supplier.material_origin && supplier.material_origin.length > 1;
+}
+
+/**
  * Determine material category from supplier's material_origin
- * Returns 'cotton', 'wool', 'composite', or 'other'
+ * Returns the category based on majority fiber (>50%) if composite, or 'composite' if no single fiber >50%
+ * For single-material fabrics, returns the appropriate category
  */
 function getMaterialCategory(supplier) {
   if (!supplier.material_origin || supplier.material_origin.length === 0) {
@@ -29,9 +37,16 @@ function getMaterialCategory(supplier) {
   
   const matId = primaryMaterial.toLowerCase();
 
-  // If multiple materials or other, return 'composite'
+  // If multiple materials, check if primary material has >50% share
+  // If yes, categorize by that majority fiber; otherwise return 'composite'
   if (supplier.material_origin.length > 1) {
-    return 'composite';
+    // If majority fiber has >50% share, categorize by that fiber
+    if (maxShare > 0.5) {
+      // Continue to categorize by the majority fiber
+    } else {
+      // No single fiber has >50%, so it's a true composite
+      return 'composite';
+    }
   }
   
   // Check for cotton
