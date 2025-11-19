@@ -22,6 +22,8 @@
   price: 395.0
   weight_gm2: 129.0
   gross_width: 150.0
+  certifications:
+  - GOTS
 - supplier: BORGHI
   fabricName: Art CR ISPIRATO fin 800
   product: chemise

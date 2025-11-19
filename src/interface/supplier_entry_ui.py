@@ -17,12 +17,20 @@ BASE_API_URL = os.environ.get('ECOBALYSE_API_URL', 'https://ecobalyse.beta.gouv.
 THIS_DIR = os.path.dirname(__file__)
 CONFIG_ROOT = os.path.join(os.path.dirname(os.path.dirname(THIS_DIR)), 'config')
 BOURRIENNE_CONFIG_PATH = os.path.join(CONFIG_ROOT, 'bourrienne.yaml')
+CERTIFICATIONS_CONFIG_PATH = os.path.join(CONFIG_ROOT, 'certifications.yaml')
 
 def _load_bourrienne_defaults():
     cfg = load_yaml(BOURRIENNE_CONFIG_PATH) if os.path.exists(BOURRIENNE_CONFIG_PATH) else {}
     return cfg or {}
 
 BOURRIENNE_DEFAULTS = _load_bourrienne_defaults()
+
+def _load_certifications_list():
+    data = load_yaml(CERTIFICATIONS_CONFIG_PATH) if os.path.exists(CERTIFICATIONS_CONFIG_PATH) else []
+    if isinstance(data, list):
+        # Ensure items are strings
+        return [str(item) for item in data if item is not None]
+    return []
 
 def _determine_spinning_type(material_id):
     spinning_cfg = BOURRIENNE_DEFAULTS.get('spinning_type', {})
@@ -206,6 +214,9 @@ def get_enum(enum_name):
         # Fallback to API if no garment_types configured
         data = get_enum_response(enum_name)
         return jsonify(data)
+    
+    if enum_name == 'certifications':
+        return jsonify(_load_certifications_list())
     
     # For all other enums, use the API response
     data = get_enum_response(enum_name)

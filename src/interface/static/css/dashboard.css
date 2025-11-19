@@ -336,6 +336,68 @@ body.weighted-panel-open .container {
   font-size: 10px;
 }
 
+.form-section-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.form-section-card label:first-of-type {
+  margin-top: 0;
+}
+
+.certification-select-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.certification-select-row select {
+  flex: 1;
+}
+
+.certification-chip-container {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.certification-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #eef2ff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: 0.05em;
+  gap: 6px;
+}
+
+.certification-chip-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  color: #555;
+}
+
+.certification-chip-remove:hover {
+  color: #000;
+}
+
+.certification-empty {
+  font-size: 11px;
+  color: #777;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
 .dashboard-page .warn {
   color: #a00;
   font-weight: 300;
