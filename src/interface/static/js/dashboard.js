@@ -17,6 +17,8 @@ const chartSelector = document.getElementById('chartSelector');
 const getRecommendationBtn = document.getElementById('getRecommendationBtn');
 const recommendationResults = document.getElementById('recommendationResults');
 const recommendationContent = document.getElementById('recommendationContent');
+const certificationSelect = document.getElementById('certificationSelect');
+const certificationChipsContainer = document.getElementById('selectedCertifications');
 const countryDisplayLookup = {};
 fetch('/api/enums/countries').then(r=>r.json()).then(arr => {
   (arr || []).forEach(entry => {
@@ -31,6 +33,129 @@ fetch('/api/enums/countries').then(r=>r.json()).then(arr => {
   });
 }).catch(()=>{});
 let isSupplierFormDirty = false;
+let certificationOptions = [];
+let selectedCertifications = [];
+
+function fetchCertificationOptions() {
+  if (!certificationSelect) return;
+  fetch('/api/enums/certifications')
+    .then(r => r.json())
+    .then(arr => {
+      certificationOptions = Array.isArray(arr) ? arr : [];
+      renderCertificationSelect();
+    })
+    .catch(() => {
+      certificationOptions = [];
+      renderCertificationSelect();
+    });
+}
+
+function renderCertificationSelect() {
+  if (!certificationSelect) return;
+  const currentValue = certificationSelect.value;
+  certificationSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Select certification';
+  certificationSelect.appendChild(placeholder);
+  
+  certificationOptions.forEach(option => {
+    const opt = document.createElement('option');
+    opt.value = option;
+    opt.textContent = option;
+    if (selectedCertifications.includes(option)) {
+      opt.disabled = true;
+    }
+    certificationSelect.appendChild(opt);
+  });
+  
+  if (currentValue && certificationSelect.querySelector(`option[value="${currentValue}"]:not([disabled])`)) {
+    certificationSelect.value = currentValue;
+  } else {
+    certificationSelect.value = '';
+  }
+}
+
+function renderCertificationChips() {
+  if (!certificationChipsContainer) return;
+  certificationChipsContainer.innerHTML = '';
+  if (!selectedCertifications.length) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'certification-empty';
+    emptyState.textContent = 'No certifications selected yet.';
+    certificationChipsContainer.appendChild(emptyState);
+    return;
+  }
+  
+  selectedCertifications.forEach(cert => {
+    const chip = document.createElement('span');
+    chip.className = 'certification-chip';
+    chip.textContent = cert;
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'certification-chip-remove';
+    removeBtn.setAttribute('aria-label', `Remove ${cert}`);
+    removeBtn.textContent = '×';
+    removeBtn.onclick = () => removeCertification(cert);
+    
+    chip.appendChild(removeBtn);
+    certificationChipsContainer.appendChild(chip);
+  });
+}
+
+function setSelectedCertifications(list) {
+  if (Array.isArray(list)) {
+    const cleaned = list
+      .map(item => typeof item === 'string' ? item.trim() : item)
+      .filter(item => item);
+    selectedCertifications = Array.from(new Set(cleaned));
+  } else {
+    selectedCertifications = [];
+  }
+  renderCertificationChips();
+  renderCertificationSelect();
+}
+
+function addCertification(cert) {
+  const normalized = typeof cert === 'string' ? cert.trim() : cert;
+  if (!normalized || selectedCertifications.includes(normalized)) {
+    return;
+  }
+  selectedCertifications.push(normalized);
+  isSupplierFormDirty = true;
+  renderCertificationChips();
+  renderCertificationSelect();
+  if (certificationSelect) {
+    certificationSelect.value = '';
+  }
+}
+
+function removeCertification(cert) {
+  const normalized = typeof cert === 'string' ? cert.trim() : cert;
+  selectedCertifications = selectedCertifications.filter(item => item !== normalized);
+  isSupplierFormDirty = true;
+  renderCertificationChips();
+  renderCertificationSelect();
+}
+
+function getSelectedCertifications() {
+  return [...selectedCertifications];
+}
+
+if (certificationSelect) {
+  certificationSelect.addEventListener('change', (e) => {
+    if (e.target.value) {
+      addCertification(e.target.value);
+    }
+  });
+  renderCertificationSelect();
+  fetchCertificationOptions();
+}
+
+if (certificationChipsContainer) {
+  renderCertificationChips();
+}
 
 function resetSupplierFormState() {
   isSupplierFormDirty = false;
@@ -55,6 +180,7 @@ addBtn.onclick = () => {
   document.getElementById('materialsSection').innerHTML = '';
   document.querySelector('.modal-content h2').textContent = 'Supplier information';
   document.getElementById('status').innerText = '';
+  setSelectedCertifications([]);
   resetSupplierFormState();
   // Reset material validation state
   const addFibreBtn = document.getElementById('addFibreBtn');
@@ -159,9 +285,11 @@ function updateChartSelector() {
 }
 
 // Weight slider event handlers with validation
-const weightSliders = ['ecobalyse', 'traceability', 'price', 'leadTime', 'moq'];
+const weightSliders = ['ecobalyse', 'transparency', 'price', 'leadTime', 'moq', 'certifications'];
 const weightTotalValue = document.getElementById('weightTotalValue');
 const weightWarning = document.getElementById('weightWarning');
+const recommendationBtnDefaultText = getRecommendationBtn ? getRecommendationBtn.textContent : 'GET RECOMMENDATION';
+let isRecommendationLoading = false;
 
 function calculateTotalWeight() {
   let total = 0;
@@ -172,6 +300,26 @@ function calculateTotalWeight() {
     }
   });
   return total;
+}
+
+function setRecommendationLoading(isLoading) {
+  isRecommendationLoading = isLoading;
+  if (getRecommendationBtn) {
+    getRecommendationBtn.disabled = isLoading;
+    getRecommendationBtn.classList.toggle('loading', isLoading);
+    getRecommendationBtn.textContent = isLoading ? 'Calculating...' : recommendationBtnDefaultText;
+  }
+  if (isLoading && recommendationContent && recommendationResults) {
+    recommendationContent.innerHTML = '<p class="recommendation-loading">Calculating recommendation...</p>';
+    recommendationResults.style.display = 'block';
+  }
+}
+
+function getSliderValue(id) {
+  const slider = document.getElementById(id);
+  if (!slider) return 0;
+  const value = parseInt(slider.value);
+  return isNaN(value) ? 0 : value;
 }
 
 function updateWeightTotal() {
@@ -190,11 +338,12 @@ function updateWeightTotal() {
 
 function getCurrentWeights() {
   return {
-    ecobalyse: parseInt(document.getElementById('ecobalyseWeight').value) || 0,
-    transparency: parseInt(document.getElementById('transparencyWeight').value) || 0,
-    price: parseInt(document.getElementById('priceWeight').value) || 0,
-    leadTime: parseInt(document.getElementById('leadTimeWeight').value) || 0,
-    moq: parseInt(document.getElementById('moqWeight').value) || 0
+    ecobalyse: getSliderValue('ecobalyseWeight'),
+    transparency: getSliderValue('transparencyWeight'),
+    price: getSliderValue('priceWeight'),
+    leadTime: getSliderValue('leadTimeWeight'),
+    moq: getSliderValue('moqWeight'),
+    certifications: getSliderValue('certificationsWeight')
   };
 }
 
@@ -236,6 +385,9 @@ updateWeightTotal();
 
 // Get recommendation button handler
 getRecommendationBtn.onclick = async () => {
+  if (isRecommendationLoading) {
+    return;
+  }
   const selectedChart = chartSelector.value;
   
   // Get weights from sliders
@@ -248,6 +400,8 @@ getRecommendationBtn.onclick = async () => {
     recommendationResults.style.display = 'block';
     return;
   }
+  
+  setRecommendationLoading(true);
   
   // Fetch suppliers based on selected chart
   try {
@@ -343,6 +497,8 @@ getRecommendationBtn.onclick = async () => {
     console.error('Error getting recommendation:', error);
     recommendationContent.innerHTML = '<p>Error calculating recommendation. Please try again.</p>';
     recommendationResults.style.display = 'block';
+  } finally {
+    setRecommendationLoading(false);
   }
 };
 
@@ -545,9 +701,14 @@ function buildFabricCard(supplier, actualIndex) {
   details.className = 'supplier-details';
   
   const traceabilityCount = calculateTraceabilityCount(supplier);
+  const certificationsList = Array.isArray(supplier.certifications)
+    ? supplier.certifications.filter(cert => cert && String(cert).trim().length > 0)
+    : [];
+  const certificationsDisplay = certificationsList.length > 0 ? certificationsList.join(', ') : 'None provided';
   const highlightFields = [
     { label: `Ecobalyse Score (${getProductTypeDisplay(supplier.product)})`, value: supplier.ecobalyse_score != null ? supplier.ecobalyse_score.toFixed(2) : 'N/A', infoTooltip: 'Ecobalyse score for the specific garment type. This is the basis for the Ecobalyse score on the radar charts. The higher the score, the worse the environmental impact.' },
-    { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true, infoTooltip: 'One point is awarded for each traceable step, and summed across the five steps. This is the basis for the traceability score on the radar charts.' }
+    { label: 'Traceability Fields', value: `${traceabilityCount}/5`, isHighlight: true, infoTooltip: 'One point is awarded for each traceable step, and summed across the five steps. This is the basis for the traceability score on the radar charts.' },
+    { label: 'Certifications', value: certificationsDisplay, isHighlight: true, infoTooltip: 'One point is awarded for each certification. The certification score does not appear on the charts, but you can prioritise it in the weighted comparison to evaluate suppliers.' }
   ];
   
   const otherFields = [
@@ -751,7 +912,8 @@ function editSupplier(index, supplier) {
     numberOfReferences: supplier.numberOfReferences,
     price: supplier.price,
     lead_time_weeks: supplier.lead_time_weeks,
-    material_origin: supplier.material_origin
+    material_origin: supplier.material_origin,
+    certifications: Array.isArray(supplier.certifications) ? supplier.certifications : []
   };
   
   // Update modal title
@@ -798,6 +960,7 @@ function editSupplier(index, supplier) {
     if (supplierValues.lead_time_weeks) {
       document.querySelector('input[name="lead_time_weeks"]').value = supplierValues.lead_time_weeks;
     }
+    setSelectedCertifications(supplierValues.certifications || []);
     
     // Fill select dropdowns - check if options are loaded first
     const selectIds = [
@@ -887,6 +1050,7 @@ if (form) {
       else { obj[k] = v; }
     }
     obj['material_origin'] = getMaterialOriginFromForm();
+    obj['certifications'] = getSelectedCertifications();
     const totalShare = obj['material_origin'].reduce((acc, v) => acc + v.share, 0);
     if (totalShare > 1.0001 || obj['material_origin'].some(m => isNaN(m.share) || m.share < 0.01 || m.share > 1)) {
       document.getElementById('matOriginWarn').style.display = '';
@@ -918,6 +1082,7 @@ if (form) {
           document.getElementById('status').innerText = '';
           document.querySelector('.modal-content h2').textContent = 'Supplier information';
           resetSupplierFormState();
+          setSelectedCertifications([]);
           modal.classList.remove('active');
         }, 1500);
       } else {

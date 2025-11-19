@@ -5,21 +5,30 @@
  * Higher weighted score = better recommendation (since 9 is best on normalized radar chart)
  */
 function calculateWeightedScore(supplierScores, weights) {
+  weights = Object.assign({ 
+    ecobalyse: 0, 
+    transparency: 0, 
+    price: 0, 
+    leadTime: 0, 
+    moq: 0,
+    certifications: 0 
+  }, weights || {});
   // Ensure all scores are valid numbers
   const ecobalyseScore = (supplierScores.ecobalyse != null && !isNaN(supplierScores.ecobalyse)) ? supplierScores.ecobalyse : 5;
   const transparencyScore = (supplierScores.traceability != null && !isNaN(supplierScores.traceability)) ? supplierScores.traceability : 5;
   const priceScore = (supplierScores.price != null && !isNaN(supplierScores.price)) ? supplierScores.price : 5;
   const leadTimeScore = (supplierScores.leadTime != null && !isNaN(supplierScores.leadTime)) ? supplierScores.leadTime : 5;
   const moqScore = (supplierScores.moq != null && !isNaN(supplierScores.moq)) ? supplierScores.moq : 5;
+  const certificationsScore = (supplierScores.certificationsScore != null && !isNaN(supplierScores.certificationsScore)) ? supplierScores.certificationsScore : 0;
   
   // Normalize weights so they sum to 100
   const totalWeight = weights.ecobalyse + weights.transparency + weights.price + 
-                       weights.leadTime + weights.moq;
+                       weights.leadTime + weights.moq + weights.certifications;
   
   if (totalWeight === 0) {
     return {
       weightedScore: 0,
-      normalizedWeights: { ecobalyse: 0, transparency: 0, price: 0, leadTime: 0, moq: 0 }
+      normalizedWeights: { ecobalyse: 0, transparency: 0, price: 0, leadTime: 0, moq: 0, certifications: 0 }
     };
   }
   
@@ -28,7 +37,8 @@ function calculateWeightedScore(supplierScores, weights) {
     transparency: weights.transparency / totalWeight * 100,
     price: weights.price / totalWeight * 100,
     leadTime: weights.leadTime / totalWeight * 100,
-    moq: weights.moq / totalWeight * 100
+    moq: weights.moq / totalWeight * 100,
+    certifications: weights.certifications / totalWeight * 100
   };
   
   // Calculate weighted score
@@ -39,7 +49,8 @@ function calculateWeightedScore(supplierScores, weights) {
     (transparencyScore * normalizedWeights.transparency / 100) +
     (priceScore * normalizedWeights.price / 100) +
     (leadTimeScore * normalizedWeights.leadTime / 100) +
-    (moqScore * normalizedWeights.moq / 100);
+    (moqScore * normalizedWeights.moq / 100) +
+    (certificationsScore * normalizedWeights.certifications / 100);
   
   return {
     weightedScore: Math.round(weightedScore * 100) / 100,
@@ -74,6 +85,14 @@ function getRecommendedSuppliers(suppliers, weights) {
  * Generate recommendation summary with caveats
  */
 function generateRecommendationSummary(recommendedSuppliers, weights) {
+  weights = Object.assign({
+    ecobalyse: 0,
+    transparency: 0,
+    price: 0,
+    leadTime: 0,
+    moq: 0,
+    certifications: 0
+  }, weights || {});
   if (!recommendedSuppliers || recommendedSuppliers.length === 0) {
     return {
       summary: 'No suppliers available for comparison.',
@@ -91,7 +110,8 @@ function generateRecommendationSummary(recommendedSuppliers, weights) {
     { name: 'Traceability', weight: weights.transparency, score: scores.traceability },
     { name: 'Price', weight: weights.price, score: scores.price },
     { name: 'Lead Time', weight: weights.leadTime, score: scores.leadTime },
-    { name: 'MOQ', weight: weights.moq, score: scores.moq }
+    { name: 'MOQ', weight: weights.moq, score: scores.moq },
+    { name: 'Certifications', weight: weights.certifications, score: scores.certificationsScore }
   ];
   
   // Sort by weight to find priorities - include ALL non-zero metrics
@@ -149,7 +169,8 @@ function getAxisDisplayName(axis) {
     transparency: 'Transparency',
     price: 'Price',
     leadTime: 'Lead Time',
-    moq: 'MOQ'
+    moq: 'MOQ',
+    certifications: 'Certifications'
   };
   return names[axis] || axis;
 }

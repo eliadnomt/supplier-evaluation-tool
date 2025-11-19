@@ -173,6 +173,22 @@ function calculateMedian(values) {
   }
 }
 
+function normalizeCertificationsList(certifications) {
+  if (!Array.isArray(certifications)) return [];
+  return certifications
+    .map(cert => typeof cert === 'string' ? cert.trim() : cert)
+    .filter(cert => cert);
+}
+
+function calculateCertificationsScore(certifications) {
+  const normalized = normalizeCertificationsList(certifications);
+  return {
+    list: normalized,
+    count: normalized.length,
+    score: normalized.length
+  };
+}
+
 /**
  * Calculate radar chart scores for a set of suppliers
  * Returns an array of score objects, one per supplier
@@ -188,6 +204,7 @@ function calculateRadarScores(suppliers) {
     const traceabilityRaw = calculateTransparencyScore(suppliers[0]);
     const traceabilityScaled = 1 + (traceabilityRaw / 10) * 8; // Scale 0-10 to 1-9
     const traceabilitySteps = Math.round((traceabilityRaw / 10) * 5);
+    const certificationData = calculateCertificationsScore(suppliers[0].certifications);
     
     // For all relative axes, single supplier is the best = 0% difference = score 5
     return [{
@@ -202,7 +219,10 @@ function calculateRadarScores(suppliers) {
       leadTime: 5,
       leadTimeDiffPercent: 0,
       moq: 5,
-      moqDiffPercent: 0
+      moqDiffPercent: 0,
+      certifications: certificationData.list,
+      certificationsScore: certificationData.score,
+      certificationsCount: certificationData.count
     }];
   }
   
@@ -255,6 +275,7 @@ function calculateRadarScores(suppliers) {
     // Calculate actual steps (0-5) from raw score (0-10)
     // traceabilityRaw = (knownSteps / 5) * 10, so knownSteps = (traceabilityRaw / 10) * 5
     const traceabilitySteps = Math.round((traceabilityRaw / 10) * 5);
+    const certificationData = calculateCertificationsScore(supplier.certifications);
     
     return {
       supplier: supplier.supplier || 'Unknown',
@@ -269,8 +290,9 @@ function calculateRadarScores(suppliers) {
       leadTimeDiffPercent: leadTimeData.diffPercent,
       moq: moqData.score,
       moqDiffPercent: moqData.diffPercent,
-      // Include certifications for display (not in scoring)
-      certifications: supplier.certifications || []
+      certifications: certificationData.list,
+      certificationsScore: certificationData.score,
+      certificationsCount: certificationData.count
     };
   });
 }

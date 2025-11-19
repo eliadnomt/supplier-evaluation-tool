@@ -183,6 +183,12 @@
   background: #555;
 }
 
+.btn-recommend.loading {
+  background: #555;
+  cursor: wait;
+  opacity: 0.8;
+}
+
 .recommendation-results {
   margin-top: 30px;
   padding-top: 20px;
@@ -190,6 +196,14 @@
 }
 
 .recommendation-results h4 {
+.recommendation-loading {
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
   font-size: 14px;
   font-weight: 300;
   text-transform: uppercase;

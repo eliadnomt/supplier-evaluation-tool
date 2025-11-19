@@ -119,6 +119,27 @@
   font-size: 13px;
 }
 
+.supplier-certifications-block {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.supplier-certification-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.supplier-certification-badge {
+  background: #eef2ff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #222;
+  text-transform: none;
+  letter-spacing: 0.05em;
+}
+
 .supplier-detail-label {
   font-weight: 300;
   color: #999;
