@@ -2,15 +2,15 @@
   fabricName: Art CR EPOQUE GOTS
   product: chemise
   price_eur_per_m: 29.07
-  lead_time_weeks: 4.0
-  fabric_lead_time_weeks: 6.0
-  moq_m: 120.0
+  lead_time_weeks: 13.0
+  fabric_lead_time_weeks: 9.0
+  moq_m: 240.0
   material_origin:
   - id: ei-coton-organic
     share: 1.0
     spinning: ConventionalSpinning
-    country: REO
-  countrySpinning: Région - Europe de l'Ouest
+    country: RNA
+  countrySpinning: Chine
   countryFabric: Région - Europe de l'Ouest
   countryDyeing: Région - Europe de l'Ouest
   countryMaking: Région - Europe de l'Ouest
@@ -18,7 +18,7 @@
   dyeingProcess: average
   makingComplexity: very-high
   businessSize: small-business
-  numberOfReferences: 100
+  numberOfReferences: 3000
   price: 395.0
   weight_gm2: 129.0
   gross_width: 150.0
@@ -28,23 +28,82 @@
   fabricName: Art CR ISPIRATO fin 800
   product: chemise
   price_eur_per_m: 16.53
-  lead_time_weeks: 4.0
-  fabric_lead_time_weeks: 6.0
-  moq_m: 480.0
+  lead_time_weeks: 12.0
+  fabric_lead_time_weeks: 8.0
+  moq_m: 240.0
   material_origin:
   - id: ei-coton-organic
     share: 1.0
     spinning: ConventionalSpinning
-    country: REO
-  countrySpinning: Pays inconnu (par défaut)
-  countryFabric: Pays inconnu (par défaut)
-  countryDyeing: Pays inconnu (par défaut)
+    country: RNA
+  countrySpinning: Chine
+  countryFabric: Région - Europe de l'Ouest
+  countryDyeing: Région - Europe de l'Ouest
   countryMaking: Région - Europe de l'Ouest
   fabricProcess: weaving
   dyeingProcess: average
   makingComplexity: very-high
   businessSize: small-business
-  numberOfReferences: 450
-  price: 350.0
+  numberOfReferences: 3000
+  price: 390.0
   weight_gm2: 129.0
   gross_width: 150.0
+  certifications: []
+- supplier: Beppetex
+  fabricName: THOR BIO RECYCLE GOTS GRS
+  product: chemise
+  price_eur_per_m: 13.7
+  lead_time_weeks: 13.0
+  fabric_lead_time_weeks: 9.0
+  moq_m: 300.0
+  material_origin:
+  - id: ei-coton-organic
+    share: 0.64
+    spinning: ConventionalSpinning
+    country: TR
+  - id: ei-pet-r
+    share: 0.36
+    spinning: SyntheticSpinning
+    country: CN
+  countrySpinning: Turquie
+  countryFabric: Région - Europe de l'Ouest
+  countryDyeing: Région - Europe de l'Ouest
+  countryMaking: Région - Europe de l'Ouest
+  fabricProcess: weaving
+  dyeingProcess: average
+  makingComplexity: very-high
+  businessSize: small-business
+  numberOfReferences: 3000
+  price: 395.0
+  weight_gm2: 220.0
+  gross_width: 150.0
+  certifications:
+  - GOTS
+- supplier: Albini
+  fabricName: ECO BYRON KENT PD BIOFUSION (OCS, GOTS, OEKO TEX)
+  product: chemise
+  price_eur_per_m: 17.35
+  lead_time_weeks: 15.0
+  fabric_lead_time_weeks: 11.0
+  moq_m: 300.0
+  material_origin:
+  - id: ei-coton-organic
+    share: 1.0
+    spinning: ConventionalSpinning
+    country: ROC
+  countrySpinning: Pays inconnu (par défaut)
+  countryFabric: Région - Europe de l'Ouest
+  countryDyeing: Région - Europe de l'Ouest
+  countryMaking: Région - Europe de l'Ouest
+  fabricProcess: weaving
+  dyeingProcess: average
+  makingComplexity: very-high
+  businessSize: small-business
+  numberOfReferences: 3000
+  price: 400.0
+  weight_gm2: 110.0
+  gross_width: 150.0
+  certifications:
+  - GOTS
+  - OEKO-TEX Standard 100
+  - Organic 100 Content Standard
